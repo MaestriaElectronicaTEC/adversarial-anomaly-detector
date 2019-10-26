@@ -39,8 +39,39 @@ def splitImage(imgPath, subsectionSize, distPath):
             imgName = baseName + '_' + str(row*halfHeight) + 'x' + str(col*halfWidth) + '.png'
             imgPath = pathBase / imgName
             cv2.imwrite(str(imgPath), subimg)
+            
+def splitImageWithoutOverlap(imgPath, subsectionSize, distPath):
+    # Load the image
+    img = cv2.imread(imgPath)
 
-def processImages(imagesPath, subsectionSize, distPath):
+    # Get image dimensions
+    imgHeight = img.shape[0]
+    imgWidth = img.shape[1]
+
+    # Get the subsetion dimensions
+    height =  subsectionSize[0]
+    width = subsectionSize[1]
+
+    # Calculate the number of subsections
+    numRows = int(imgHeight / height)
+    numCols = int(imgWidth / width)
+    totSubImg = numRows * numCols
+
+    # Get the base name for each of the subsection images
+    baseName = imgPath.split('/')[-1]
+    baseName = baseName[0:-4]
+    pathBase = Path(distPath)
+    print('Total of sub-images for {}: {}'.format(baseName, totSubImg))
+
+    # Create the subimages
+    for row in range(numRows):
+        for col in range(numCols):
+            subimg = img[row*height : row*height + height, col*width : col*width + width]
+            imgName = baseName + '_' + str(row*height) + 'x' + str(col*width) + '.png'
+            imgPath = pathBase / imgName
+            cv2.imwrite(str(imgPath), subimg)
+
+def processImages(imagesPath, subsectionSize, distPath, overlap):
     imgList = glob.glob(imagesPath + '*.png')
     pathBase = Path(distPath)
 
@@ -52,13 +83,17 @@ def processImages(imagesPath, subsectionSize, distPath):
         imgDistPath = pathBase / baseName
         os.mkdir(str(imgDistPath))
 
-        splitImage(img, subsectionSize, str(imgDistPath))
+        if overlap:
+            splitImage(img, subsectionSize, str(imgDistPath))
+        else:
+            splitImageWithoutOverlap(img, subsectionSize, str(imgDistPath))
 
 def main():
     # Setup the command line arguments
     parser = argparse.ArgumentParser(description='Script that splits an image into subsections')
     parser.add_argument('--image', help='Image path', default='')
     parser.add_argument('--images', help='Directory with a group of images', default='')
+    parser.add_argument('--overlap', help='Activate the overlapping of the generated images', default=False, action='store_true')
     parser.add_argument('--distDir', help='Directory where the subsections will be stored', default = '')
     parser.add_argument('--subsectionSize', help='Size of each subsection H x W (Default (50, 50))', nargs='+', type=int)
     args = parser.parse_args()
@@ -68,6 +103,7 @@ def main():
     imagesPath = str(args.images)
     distPath = str(args.distDir)
     subsectionSize = (50, 50)
+    overlap = args.overlap
     if args.subsectionSize != None:
         subsectionSize = tuple(args.subsectionSize)
 
@@ -77,9 +113,12 @@ def main():
 
     # Process the variables
     if imagePath != '':
-        splitImage(imagePath, subsectionSize, distPath)
+        if overlap:
+            splitImage(imagePath, subsectionSize, str(imgDistPath))
+        else:
+            splitImageWithoutOverlap(img, subsectionSize, str(imgDistPath))
     if imagesPath != '':
-        processImages(imagesPath, subsectionSize, distPath)
+        processImages(imagesPath, subsectionSize, distPath, overlap)
 
 if __name__ == "__main__":
     main()
