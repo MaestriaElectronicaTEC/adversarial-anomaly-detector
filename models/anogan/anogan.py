@@ -32,16 +32,16 @@ def combine_images(generated_images):
 ### generator model define
 def generator_model():
     inputs = Input((10,))
-    fc1 = Dense(input_dim=10, units=128*7*7)(inputs)
+    fc1 = Dense(input_dim=10, units=128*12*12)(inputs)
     fc1 = BatchNormalization()(fc1)
     fc1 = LeakyReLU(0.2)(fc1)
-    fc2 = Reshape((7, 7, 128), input_shape=(128*7*7,))(fc1)
+    fc2 = Reshape((12, 12, 128), input_shape=(128*12*12,))(fc1)
     up1 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(fc2)
     conv1 = Conv2D(64, (3, 3), padding='same')(up1)
     conv1 = BatchNormalization()(conv1)
     conv1 = Activation('relu')(conv1)
     up2 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(conv1)
-    conv2 = Conv2D(1, (5, 5), padding='same')(up2)
+    conv2 = Conv2D(3, (5, 5), padding='same')(up2)
     outputs = Activation('tanh')(conv2)
     
     model = Model(inputs=[inputs], outputs=[outputs])
@@ -49,7 +49,7 @@ def generator_model():
 
 ### discriminator model define
 def discriminator_model():
-    inputs = Input((28, 28, 1))
+    inputs = Input((48, 48, 3))
     conv1 = Conv2D(64, (5, 5), padding='same')(inputs)
     conv1 = LeakyReLU(0.2)(conv1)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
@@ -115,7 +115,8 @@ def train(BATCH_SIZE, X_train):
             # visualize training results
             if index % 20 == 0:
                 image = combine_images(generated_images)
-                image = image*127.5+127.5
+                image = image*255.0
+                image = image.astype(np.uint8)
                 cv2.imwrite('./result/'+str(epoch)+"_"+str(index)+".png", image)
 
             # attach label for training discriminator
