@@ -99,7 +99,7 @@ def train(BATCH_SIZE, X_train):
     d.compile(loss='mse', optimizer=d_optim)
     
 
-    for epoch in range(10):
+    for epoch in range(20):
         print ("Epoch is", epoch)
         n_iter = int(X_train.shape[0]/BATCH_SIZE)
         progress_bar = Progbar(target=n_iter)
@@ -113,7 +113,7 @@ def train(BATCH_SIZE, X_train):
             generated_images = g.predict(noise, verbose=0)
             
             # visualize training results
-            if index % 20 == 0:
+            if index % 100 == 0:
                 image = combine_images(generated_images)
                 image = image*255.0
                 image = image.astype(np.uint8)
