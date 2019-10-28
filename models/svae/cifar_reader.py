@@ -4,7 +4,7 @@ import os
 
 class cifar_reader:
     def __init__(self):
-        self.data_dir = '/tempspace/hyuan/VAE/Cifar/cifar-10-batches-py/'
+        self.data_dir = '/floyd/input/cifar10/cifar-10-batches-py/'
         self.train_idx= 0
         self.test_idx =0
         self.data_set = self.load()
@@ -28,7 +28,7 @@ class cifar_reader:
         return train_x
 
     def load_test(self):
-        train_data = [self.unpickle(self.data_dir+'data_batch_'+str(i)) for i in range(6,7)]
+        train_data = [self.unpickle(self.data_dir+'test_batch')]
         train_x = np.concatenate([d for d in train_data], axis=0)
         np.random.seed(0)
         np.random.shuffle(train_x)

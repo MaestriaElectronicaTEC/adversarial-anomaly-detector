@@ -38,13 +38,13 @@ def decoder(input_sensor):
         activation_fn=tf.nn.elu, normalizer_fn=tf.contrib.layers.batch_norm, 
         normalizer_params={'scale': True})
     output = tf.contrib.layers.conv2d_transpose(
-        output, 16, deconv_size, scope='deconv4', stride = 2,
+        output, 16, deconv_size, scope='deconv4', stride = 1,
         activation_fn=tf.nn.elu, normalizer_fn=tf.contrib.layers.batch_norm, 
         normalizer_params={'scale': True})
     output = tf.contrib.layers.conv2d_transpose(
         output, 3, deconv_size, scope='deconv5', stride=2,
         activation_fn=tf.nn.tanh, normalizer_fn=tf.contrib.layers.batch_norm, 
-        normalizer_params={'scale': True})   
+        normalizer_params={'scale': True})  
     return output
 
 def decoder_vanilla(input_sensor):

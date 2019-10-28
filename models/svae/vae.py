@@ -8,9 +8,9 @@ from generator import Generator
 class VAE(Generator):
 
     def __init__(self, hidden_size, batch_size, learning_rate, channel, model_name):
-        self.working_directory = '/tempspace/hyuan/VAE'
-        self.height = 64
-        self.width = 64                           
+        self.working_directory = '/floyd/home/models/svae'
+        self.height = 32
+        self.width = 32                           
         self.modeldir = './modeldir'
         self.logdir = './logdir'
         self.hidden_size = hidden_size

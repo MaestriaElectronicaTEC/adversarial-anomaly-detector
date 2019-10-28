@@ -22,7 +22,7 @@ flags.DEFINE_integer("updates_per_epoch", 1600, "number of updates per epoch")
 flags.DEFINE_integer("max_epoch", 2000 , "max epoch")
 flags.DEFINE_integer("max_test_epoch", 100, "max  test epoch")
 flags.DEFINE_float("learning_rate", 1e-4, "learning rate")
-flags.DEFINE_string("working_directory", "/tempspace/hyuan/VAE", "the file directory")
+flags.DEFINE_string("working_directory", "/floyd/home/models/svae", "the file directory")
 flags.DEFINE_integer("hidden_size", 3, "size of the hidden VAE unit")
 flags.DEFINE_integer("channel", 64, "size of initial channel in decoder")
 flags.DEFINE_integer("checkpoint", 1450, "number of epochs to be reloaded")
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         sys.exit("the hidden size of vanilla vae must be 1, please check")
 
     model = VAE(FLAGS.hidden_size, FLAGS.batch_size, FLAGS.learning_rate, FLAGS.channel, FLAGS.model_name)
-    data = celeba() # modify this line to change the dataset reader
+    data = cifar_reader() # modify this line to change the dataset reader
     if args.action == 'train':### training part
       for epoch in range(FLAGS.max_epoch): 
           training_loss = 0.0
