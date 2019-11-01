@@ -1,4 +1,5 @@
 from __future__ import print_function
+from keras.callbacks import TensorBoard
 from keras.models import Sequential, Model
 from keras.layers import Input, Reshape, Dense, Dropout, MaxPooling2D, Conv2D, Flatten
 from keras.layers import Conv2DTranspose, LeakyReLU
@@ -31,7 +32,7 @@ def combine_images(generated_images):
 
 ### generator model define
 def generator_model():
-    inputs = Input((10,))
+    inputs = Input((64,))
     fc1 = Dense(input_dim=10, units=128*12*12)(inputs)
     fc1 = BatchNormalization()(fc1)
     fc1 = LeakyReLU(0.2)(fc1)
@@ -66,7 +67,7 @@ def discriminator_model():
 ### d_on_g model for training generator
 def generator_containing_discriminator(g, d):
     d.trainable = False
-    ganInput = Input(shape=(10,))
+    ganInput = Input(shape=(64,))
     x = g(ganInput)
     ganOutput = d(x)
     gan = Model(inputs=ganInput, outputs=ganOutput)
@@ -85,35 +86,51 @@ def load_model():
     return g, d
 
 ### train generator and discriminator
-def train(BATCH_SIZE, X_train):
+def train(BATCH_SIZE, epochs, X_train, use_petrained_model=False):
+    
+    ### TensorBoard define
+    #logdir = "./logs/generator" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    #tensorboard_callback_generator = TensorBoard(log_dir=logdir, write_grads=True, write_images=True)
+    #logdir = "./logs/discriminator" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    #tensorboard_callback_discriminator = TensorBoard(log_dir=logdir, write_grads=True, write_images=True)
     
     ### model define
     d = discriminator_model()
     g = generator_model()
+    
+    ### Load pre-trained model
+    if use_petrained_model:
+        print('Used pre-trained models')
+        g.load_weights('weights/generator.h5')
+        d.load_weights('weights/discriminator.h5')
+    
     d_on_g = generator_containing_discriminator(g, d)
-    d_optim = RMSprop(lr=0.0004)
-    g_optim = RMSprop(lr=0.0002)
+    d_optim = RMSprop(lr=0.0004, rho=0.9, epsilon=1e-08, decay=0.0)
+    g_optim = RMSprop(lr=0.0002, rho=0.9, epsilon=1e-08, decay=0.0)
     g.compile(loss='mse', optimizer=g_optim)
     d_on_g.compile(loss='mse', optimizer=g_optim)
     d.trainable = True
     d.compile(loss='mse', optimizer=d_optim)
     
+    ### loss metrics
+    generator_loss = 0
+    discriminator_loss = 0
 
-    for epoch in range(20):
+    for epoch in range(epochs):
         print ("Epoch is", epoch)
         n_iter = int(X_train.shape[0]/BATCH_SIZE)
         progress_bar = Progbar(target=n_iter)
         
         for index in range(n_iter):
             # create random noise -> U(0,1) 10 latent vectors
-            noise = np.random.uniform(0, 1, size=(BATCH_SIZE, 10))
+            noise = np.random.uniform(0, 1, size=(BATCH_SIZE, 64))
 
             # load real data & generate fake data
             image_batch = X_train[index*BATCH_SIZE:(index+1)*BATCH_SIZE]
             generated_images = g.predict(noise, verbose=0)
             
             # visualize training results
-            if index % 100 == 0:
+            if index % 2000 == 0:
                 image = combine_images(generated_images)
                 image = image*255.0
                 image = image.astype(np.uint8)
@@ -135,15 +152,19 @@ def train(BATCH_SIZE, X_train):
         print ('')
 
         # save weights for each epoch
-        g.save_weights('weights/generator.h5', True)
-        d.save_weights('weights/discriminator.h5', True)
+        if generator_loss < g_loss:
+            generator_loss = g_loss
+            g.save_weights('weights/generator.h5', True)
+        if discriminator_loss < d_loss:
+            discriminator_loss = d_loss
+            d.save_weights('weights/discriminator.h5', True)
     return d, g
 
 ### generate images
 def generate(BATCH_SIZE):
     g = generator_model()
     g.load_weights('weights/generator.h5')
-    noise = np.random.uniform(0, 1, (BATCH_SIZE, 10))
+    noise = np.random.uniform(0, 1, (BATCH_SIZE, 64))
     generated_images = g.predict(noise)
     return generated_images
 
@@ -170,8 +191,8 @@ def anomaly_detector(g=None, d=None):
     g = Model(inputs=g.layers[1].input, outputs=g.layers[-1].output)
     g.trainable = False
     # Input layer cann't be trained. Add new layer as same size & same distribution
-    aInput = Input(shape=(10,))
-    gInput = Dense((10), trainable=True)(aInput)
+    aInput = Input(shape=(64,))
+    gInput = Dense((64), trainable=True)(aInput)
     gInput = Activation('sigmoid')(gInput)
     
     # G & D feature
@@ -187,7 +208,7 @@ def anomaly_detector(g=None, d=None):
 
 ### anomaly detection
 def compute_anomaly_score(model, x, iterations=500, d=None):
-    z = np.random.uniform(0, 1, size=(1, 10))
+    z = np.random.uniform(0, 1, size=(1, 64))
     
     intermidiate_model = feature_extractor(d)
     d_x = intermidiate_model.predict(x)
