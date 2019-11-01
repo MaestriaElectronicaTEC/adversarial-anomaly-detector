@@ -9,8 +9,8 @@ class VAE(Generator):
 
     def __init__(self, hidden_size, batch_size, learning_rate, channel, model_name):
         self.working_directory = '/floyd/home/models/svae'
-        self.height = 32
-        self.width = 32                           
+        self.height = 48
+        self.width = 48                           
         self.modeldir = './modeldir'
         self.logdir = './logdir'
         self.hidden_size = hidden_size

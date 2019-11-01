@@ -24,6 +24,7 @@ def encoder(input_tensor, output_size):
     return tf.contrib.layers.fully_connected(output, output_size, activation_fn=None)
 
 def decoder(input_sensor):
+    print(input_sensor.shape)
     output = tf.transpose(input_sensor, perm=[0, 2, 3 ,1])
     output = tf.contrib.layers.conv2d_transpose(
         output, 64, deconv_size_second, scope='deconv1', stride = 2,
@@ -38,13 +39,13 @@ def decoder(input_sensor):
         activation_fn=tf.nn.elu, normalizer_fn=tf.contrib.layers.batch_norm, 
         normalizer_params={'scale': True})
     output = tf.contrib.layers.conv2d_transpose(
-        output, 16, deconv_size, scope='deconv4', stride = 1,
+        output, 16, deconv_size, scope='deconv4', stride = 2,
         activation_fn=tf.nn.elu, normalizer_fn=tf.contrib.layers.batch_norm, 
         normalizer_params={'scale': True})
     output = tf.contrib.layers.conv2d_transpose(
         output, 3, deconv_size, scope='deconv5', stride=2,
         activation_fn=tf.nn.tanh, normalizer_fn=tf.contrib.layers.batch_norm, 
-        normalizer_params={'scale': True})  
+        normalizer_params={'scale': True})
     return output
 
 def decoder_vanilla(input_sensor):
