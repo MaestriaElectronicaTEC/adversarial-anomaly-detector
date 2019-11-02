@@ -114,7 +114,6 @@ def train(BATCH_SIZE, epochs, X_train, use_petrained_model=False):
     
     ### loss metrics
     generator_loss = 0
-    discriminator_loss = 0
 
     for epoch in range(epochs):
         print ("Epoch is", epoch)
@@ -155,8 +154,6 @@ def train(BATCH_SIZE, epochs, X_train, use_petrained_model=False):
         if generator_loss < g_loss:
             generator_loss = g_loss
             g.save_weights('weights/generator.h5', True)
-        if discriminator_loss < d_loss:
-            discriminator_loss = d_loss
             d.save_weights('weights/discriminator.h5', True)
     return d, g
 
