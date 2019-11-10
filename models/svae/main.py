@@ -22,7 +22,7 @@ logging = tf.logging
 
 flags.DEFINE_integer("batch_size", 32, "batch size")
 flags.DEFINE_integer("updates_per_epoch", 1600, "number of updates per epoch")
-flags.DEFINE_integer("max_epoch", 1000 , "max epoch")
+flags.DEFINE_integer("max_epoch", 2000 , "max epoch")
 flags.DEFINE_integer("max_test_epoch", 100, "max  test epoch")
 flags.DEFINE_float("learning_rate", 1e-4, "learning rate")
 flags.DEFINE_string("working_directory", "/floyd/home/models/svae", "the file directory")
@@ -80,6 +80,7 @@ if __name__ == "__main__":
     if args.action == 'train':### training part
       for epoch in range(FLAGS.max_epoch): 
           training_loss = 0.0
+          print('epoch', epoch)
           pbar = ProgressBar()
           t_start= time.clock()
           for i in pbar(range(FLAGS.updates_per_epoch)):
