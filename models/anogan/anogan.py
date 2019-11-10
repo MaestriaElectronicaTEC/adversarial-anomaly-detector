@@ -131,7 +131,7 @@ def train(BATCH_SIZE, epochs, X_train, use_petrained_model=False):
             # visualize training results
             if index % 2000 == 0:
                 image = combine_images(generated_images)
-                image = image*255.0
+                image = (image*127.5)+127.5
                 image = image.astype(np.uint8)
                 cv2.imwrite('./result/'+str(epoch)+"_"+str(index)+".png", image)
 
