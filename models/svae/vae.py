@@ -44,6 +44,7 @@ class VAE(Generator):
 
             if model_name == 'low_rank':
                 out_put = decoder(new_sample)
+                self.output_tensor = out_put
             else:
                 out_put = decoder_vanilla(new_sample)
 
@@ -62,8 +63,8 @@ class VAE(Generator):
         summarys.append(tf.summary.scalar('/KL-loss', self.kl_loss))
         summarys.append(tf.summary.scalar('/Rec-loss', self.rec_loss))
         summarys.append(tf.summary.scalar('/loss', total_loss))
-        summarys.append(tf.summary.image('input', tf.reshape(input_tensor, [-1, self.height, self.width, 3]), max_outputs = 20))
-        summarys.append(tf.summary.image('output', tf.reshape(out_put, [-1, self.height, self.width, 3 ]), max_outputs = 20))
+        #summarys.append(tf.summary.image('input', tf.reshape(input_tensor, [-1, self.height, self.width, 3]), max_outputs = 20))
+        #summarys.append(tf.summary.image('output', tf.reshape(out_put, [-1, self.height, self.width, 3 ]), max_outputs = 20))
         self.train = tf.contrib.layers.optimize_loss(total_loss, tf.contrib.framework.get_or_create_global_step(), 
             learning_rate=self.learning_rate, optimizer='Adam', update_ops=[])
         self.sess = tf.Session()
