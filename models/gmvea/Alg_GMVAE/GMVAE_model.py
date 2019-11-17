@@ -266,6 +266,16 @@ class GMVAEModel(BaseModel):
             x_batch = data[ix]
             x_labels = np.zeros(x_batch.shape[0])
             x_recons, z_recons, w_recons, y_recons = self.model_graph.reconstruct_input(session, x_batch, beta=1)
+            
+            loss, recons, cond_prior, KL_w, y_prior, L2_loss = self.model_graph.evaluate(session, x_batch)
+            valid_string = 'VALID | Loss: ' + str(loss) + \
+                            ' | Recons: ' + str(recons) + \
+                            ' | CP: ' + str(cond_prior) + \
+                            ' | KL_w: ' + str(KL_w) + \
+                            ' | KL_y: ' + str(y_prior) + \
+                            ' | L2_loss: '+  str(L2_loss)
+            print(valid_string)
+            
             return x_batch, x_labels, x_recons, z_recons, w_recons, y_recons 
         
     def generate_embedding(self, data):
