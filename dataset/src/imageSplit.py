@@ -114,9 +114,9 @@ def main():
     # Process the variables
     if imagePath != '':
         if overlap:
-            splitImage(imagePath, subsectionSize, str(imgDistPath))
+            splitImage(imagePath, subsectionSize, str(distPath))
         else:
-            splitImageWithoutOverlap(img, subsectionSize, str(imgDistPath))
+            splitImageWithoutOverlap(imagePath, subsectionSize, str(distPath))
     if imagesPath != '':
         processImages(imagesPath, subsectionSize, distPath, overlap)
 
