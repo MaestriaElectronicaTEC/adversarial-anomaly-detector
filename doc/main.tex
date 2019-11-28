@@ -21,6 +21,7 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage{ifthen}                     % provide if-then-else operators
+\usepackage[english]{babel}
 
 % --------------------------------------------------------------------------
 % Global variables required in document formatting
@@ -41,16 +42,16 @@
 \newboolean{draftmode}                  % boolean used to control draft-mode
 % Ensure that only one of the next two lines is active:
 %\setboolean{draftmode}{true}            % turn draft mode on
-\setboolean{draftmode}{false}           % turn draft mode off
+\setboolean{draftmode}{true}           % turn draft mode off
 % --------------------------------------------------------------------------
 %
 % GENERAL AUTHOR, TITLE AND KEYWORDS
 %
 % Nombre del Estudiante
 \newcommand{\thesisAuthorAddress}{el señor} %% el señor / la señora / ...
-\newcommand{\thesisAuthor}{Juan Antonio Pérez Pérez} %% Nombre completo
-\newcommand{\thesisAuthorShort}{J.~Pérez}  %% Nombre corto para pie de página
-\newcommand{\thesisAuthorTECID}{201412345} %% Carné
+\newcommand{\thesisAuthor}{Luis Alonso Murillo Rojas} %% Nombre completo
+\newcommand{\thesisAuthorShort}{L.~Murillo}  %% Nombre corto para pie de página
+\newcommand{\thesisAuthorTECID}{201021497} %% Carné
 
 % Título de la tesis
 \newcommand{\thesisTitle}{Diseño de un aparato que produce energía
@@ -58,7 +59,7 @@
   circuitos analógicos controlados por una arquitectura RISC V}
 
 % Keywords
-\newcommand{\thesisKeywords}{palabras, clave, ...}
+\newcommand{\thesisKeywords}{Tomato, Deep Learning, Anomaly detection, Autoencoders, Generative Adversarial Networks}
 
 % Descripción de la editorial
 \newcommand{\boxeditorial}{%
@@ -87,9 +88,9 @@
 
   \pagenumbering{alph}
   % fix some terms not activated due to the bug of hyperref with spanish.
-  \renewcommand{\tablename}{Tabla}
-  \renewcommand{\listtablename}{\'Indice de tablas}
-  \renewcommand{\examplesolution}{Solución}
+  \renewcommand{\tablename}{Table}
+  \renewcommand{\listtablename}{\'Table index}
+  \renewcommand{\examplesolution}{Solution}
   \pagestyle{empty}
 
   % select one of the following titlepages
@@ -107,12 +108,12 @@
   %% Acta y hoja del tribunal
   
   %% Para la licenciatura en electrónica:
-  \include{tribunal_licel}  % Remover en versión final
-  \include{acta_licel}      % Remover en versión final
+  %\include{tribunal_licel}  % Remover en versión final
+  %\include{acta_licel}      % Remover en versión final
   
   %% Para la maestría en electrónica:
-  %\include{tribunal_mscel}  % Remover en versión final
-  %\include{acta_mscel}      % Remover en versión final
+  \include{tribunal_mscel}  % Remover en versión final
+  \include{acta_mscel}      % Remover en versión final
   %% -------------------------------------------------
   
   \include{resumen}
@@ -125,7 +126,7 @@
   \pagestyle{fancy}
   \pagenumbering{roman}
 
-  \pdfbookmark[1]{Indice General}{Indice General}
+  \pdfbookmark[1]{General index}{General index}
 
   \parskip0ex                           % space between paragraphs
 
@@ -152,18 +153,18 @@
   %\pagenumbering{arab}
 
   % Main files
-  \include{intro}
-  \include{teoria}
-  \include{solucion}
-  \include{resultados}
-  \include{conclusiones}
+  \include{intro_en}
+  \include{theory}
+  \include{solution}
+  \include{results}
+  \include{conclusions}
 
   %----------------------------------------------------------------------------
   % literature in bibtex way:
   % \bibliographystyle{sty/plainurl} % for english documents
   % \bibliography{literatura}
   % literature in biblatex/biber way
-  \printbibliography[title={Bibliografía},heading=bibintoc]
+  \printbibliography[title={Bibliography},heading=bibintoc]
   %----------------------------------------------------------------------------
 
   %----------------------------------------------------------------------------
