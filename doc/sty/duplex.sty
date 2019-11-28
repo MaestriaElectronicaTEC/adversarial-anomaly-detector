@@ -1,0 +1,44 @@
+
+\NeedsTeXFormat{LaTeX2e}[1994/12/01]
+\ProvidesPackage{duplex}[2000/07/20 support for duplex PostScript printers]
+
+\typeout{2000/07/20 support for duplex PostScript 2.0 printers}
+\typeout{This package requires the dvips postscript driver.}
+
+%% Usage:
+%
+% \usepackage{duplex}
+%
+% -> enables Duplex mode, if the \documentclass command was given the
+%    "twoside" option
+%
+% \usepackage[duplex]{duplex} 
+% 
+% -> enables Duplex mode independently of the state of twoside option
+%
+% \usepackage[simplex]{duplex}
+% 
+% -> disables Duplex mode independently of the state of the twoside option.
+%
+
+\newcommand{\duplexmode}{
+  \if@twoside
+    \special{!<< /Duplex true >> setpagedevice}
+  \else
+    \special{!<< /Duplex false >> setpagedevice}
+  \fi
+}
+
+\DeclareOption{duplex}{%
+  \renewcommand{\duplexmode}{\special{!<< /Duplex true >> setpagedevice}}
+}
+
+\DeclareOption{simplex}{%
+  \renewcommand{\duplexmode}{\special{!<< /Duplex false >> setpagedevice}}
+}
+
+\ProcessOptions
+
+\duplexmode
+
+\endinput

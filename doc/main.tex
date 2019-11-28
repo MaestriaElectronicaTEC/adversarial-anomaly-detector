@@ -1,0 +1,181 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Author:  Pablo Alvarado
+%
+% Área Académica de Ingeniería en Computadores
+% Instituto Tecnológico de Costa Rica
+%
+% Tesis de Licenciatura
+% 
+% Phone:   +506 2550 2495
+% email:   palvarado@tec.ac.cr
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \documentclass is book
+
+% If you want a printable two-side version of the thesis
+%\documentclass[12pt,twoside,letterpaper]{book}
+
+% If you want an electronic-only version of the thesis, do it one-sided
+\documentclass[12pt,oneside,letterpaper]{book}
+
+\usepackage[utf8]{inputenc}
+\usepackage{ifthen}                     % provide if-then-else operators
+
+% --------------------------------------------------------------------------
+% Global variables required in document formatting
+% --------------------------------------------------------------------------
+%
+% BOOK MODE
+%
+\newboolean{bookmode}                  % boolean used to control book format
+% Ensure that only one of the next two lines is active:
+\setboolean{bookmode}{true}           % turn book mode on
+%\setboolean{bookmode}{false}           % turn book mode off
+
+%
+% DRAFT MODE
+%   The draft mode activates the TODO index and some "draft" markings all
+%   around.  Ensure you set it to false for the final version!!
+%
+\newboolean{draftmode}                  % boolean used to control draft-mode
+% Ensure that only one of the next two lines is active:
+%\setboolean{draftmode}{true}            % turn draft mode on
+\setboolean{draftmode}{false}           % turn draft mode off
+% --------------------------------------------------------------------------
+%
+% GENERAL AUTHOR, TITLE AND KEYWORDS
+%
+% Nombre del Estudiante
+\newcommand{\thesisAuthorAddress}{el señor} %% el señor / la señora / ...
+\newcommand{\thesisAuthor}{Juan Antonio Pérez Pérez} %% Nombre completo
+\newcommand{\thesisAuthorShort}{J.~Pérez}  %% Nombre corto para pie de página
+\newcommand{\thesisAuthorTECID}{201412345} %% Carné
+
+% Título de la tesis
+\newcommand{\thesisTitle}{Diseño de un aparato que produce energía
+  infinita y elimina el cambio climático por medio del uso de
+  circuitos analógicos controlados por una arquitectura RISC V}
+
+% Keywords
+\newcommand{\thesisKeywords}{palabras, clave, ...}
+
+% Descripción de la editorial
+\newcommand{\boxeditorial}{%
+}
+
+% --------------------------------------------------------------------------
+
+% include all packages and define all required general macros
+\input{macros}
+
+% Tribunal Evaluador
+%
+% Indique los nombres de los lectores y asesor
+% El parámetro opcional es [M]asculino o [F]emenino
+\setLectorI[F]{Dra.\, María del Pilar Pérez Fernández}
+\setLectorII{M.\,Sc.\,Juan Pérez Hernández}
+\setAsesor{Ing.\,Albert Einstein Sánchez}
+
+% allow equations to be splitted (breaked) into several pages
+\allowdisplaybreaks[3]
+
+% --------------------------------------------------------------------------
+\begin{document}
+  % where to look for graphics
+  \graphicspath{{./}{./fig/}}
+
+  \pagenumbering{alph}
+  % fix some terms not activated due to the bug of hyperref with spanish.
+  \renewcommand{\tablename}{Tabla}
+  \renewcommand{\listtablename}{\'Indice de tablas}
+  \renewcommand{\examplesolution}{Solución}
+  \pagestyle{empty}
+
+  % select one of the following titlepages
+  \include{titlepage_licel_es} % Titlepage in Spanish
+
+  %\include{titlepage_licce_es}  % Titlepage in Spanish
+  %\include{titlepage_licce_en} % Titlepage in English (only if thesis is in En)
+  
+  %\include{titlepage_msc_es}   % Titlepage in Spanish
+  %\include{titlepage_msc_en}   % Titlepage in English (only if thesis is in En)
+
+  \include{disclaimer}
+  
+  %% -------------------------------------------------
+  %% Acta y hoja del tribunal
+  
+  %% Para la licenciatura en electrónica:
+  \include{tribunal_licel}  % Remover en versión final
+  \include{acta_licel}      % Remover en versión final
+  
+  %% Para la maestría en electrónica:
+  %\include{tribunal_mscel}  % Remover en versión final
+  %\include{acta_mscel}      % Remover en versión final
+  %% -------------------------------------------------
+  
+  \include{resumen}
+  \include{dedicatoria}
+  \include{agradecimientos}
+
+  %----------------------------------------------------------------------------
+  \frontmatter
+  %----------------------------------------------------------------------------
+  \pagestyle{fancy}
+  \pagenumbering{roman}
+
+  \pdfbookmark[1]{Indice General}{Indice General}
+
+  \parskip0ex                           % space between paragraphs
+
+  \tableofcontents                      % Table of contents
+  \listoffigures                        % List of figures
+  \listoftables                         % List of tables
+
+\ifdraft{%
+  % todo's                              % TODOs
+  \listoftodo
+}{%
+}
+
+  \include{notation}                    % Notation
+  \include{glosario}                    % Abbreviation
+
+  \parskip1.3ex                         % space between paragraphs
+
+  %----------------------------------------------------------------------------
+  \mainmatter
+  %----------------------------------------------------------------------------
+  % where to look for graphics
+  \graphicspath{{./}{./fig/}}
+  %\pagenumbering{arab}
+
+  % Main files
+  \include{intro}
+  \include{teoria}
+  \include{solucion}
+  \include{resultados}
+  \include{conclusiones}
+
+  %----------------------------------------------------------------------------
+  % literature in bibtex way:
+  % \bibliographystyle{sty/plainurl} % for english documents
+  % \bibliography{literatura}
+  % literature in biblatex/biber way
+  \printbibliography[title={Bibliografía},heading=bibintoc]
+  %----------------------------------------------------------------------------
+
+  %----------------------------------------------------------------------------
+  \appendix
+  %----------------------------------------------------------------------------
+
+  \include{apendice}
+
+  %----------------------------------------------------------------------------
+  \backmatter
+  %----------------------------------------------------------------------------
+
+  \printindex                % insert index into document. Don't forget to call
+                             % "makeindex filename" first.
+\end{document}
