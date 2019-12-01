@@ -1,2 +1,10 @@
 \chapter{Conclusions}
 \label{ch:conclusions}
+
+This project has been able to corroborate that the variational autoencoder architectures do not have the needed performance to achieve a decent anomaly detection due to its blur issues. On the other side the AnoGAN has more promising results with better reconstruction images.
+
+A modification to the AnoGAN architecture was tried, allowing it to improve considerably the reconstruction time.
+
+As future work, the objective must be to improve the generator of the GAN. One possible strategy is in the implementation of a disentangling representation of the generator latent space \cite{Higgins2016}. Another possible approach is the use of a regularized in the latent space of the generator, in a similar way as proposed in \cite{Karras2018}.
+
+Finally, a segmentation process should be implemented in order to mark the possible anomalous areas.
