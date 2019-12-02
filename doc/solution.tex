@@ -5,21 +5,21 @@
 
 The data acquisition for this project has used a camera that captures in a resolution of 1920x1080. The tomato data was captured in tomato crops located in the Alajuela province of Costa Rica.
 
-For the purpose of the architectures experiment was used 191520 images of a dimension fo 50x50 each. For this set of images, 80\% was used for testing and 20\% used for validation. This training validation data represents only healthy tomato plants. Also was used 798 images for testing and in this case, there are also unhealthy tomato photos.
+For the purpose of the architectures experiment was used 191520 images of a dimension of 50x50 each. For this set of images, 80\% was used for testing and 20\% used for validation. This training validation data represents only healthy tomato plants. Also was used 798 images for testing and in this case, there are also unhealthy tomato photos.
 
-Before using these images for the training of the models, a normalization was applied to convert the image values to be in a range between -1 to 1. Finally, some image data augmentation like rotation, zoom, width shift, among other image transformations was implemented.
+Before using these images for the training of the models, a normalization was applied to convert the image values to be in a range between -1 to 1. Finally, some image data augmentation like rotation, zoom, width shift, among other image transformations were implemented.
 
 \section{Architecture experiments}
 
-In order to evaluate the different architectures for the anomaly detection in tomato plants, three experiments were proposed: one to explore the AnoGAN architecture, another to evaluate the spatial variational autoencoder and a third experiment to make use of the gaussian-mixture variational autoencoder.
+In order to evaluate the different architectures for the anomaly detection in tomato plants, three experiments were proposed: one to explore the adversarial anomaly detector architecture, another to evaluate the spatial variational autoencoder and a third experiment to make use of the gaussian-mixture variational autoencoder.
 
-All the experiment used the same dataset and for each architecture is tested its reconstruction of an input image. The expected behavior here is that, as the model is only trained with healthy images of tomato, if some input image presents a possible disease, the model shouldn't be able to reconstruct the affected area that reconstruction error or dissimilarity shall be an indication of the presence of an anomaly.
+All the experiment used the same dataset and for each architecture is tested its reconstruction of an input image. The expected behavior here is that, as the model is only trained with healthy images of tomato, if some input image presents a possible disease, the model shouldn't be able to reconstruct the affected area, and that reconstruction error or dissimilarity shall be an indication of the presence of an anomaly.
 
 \section{Contribution}
 
-The architecture proposed in this project is an adversarial anomaly detector inspired in the AnoGAN. This architecture is composed of the typical generator and discriminator of a typical GAN, but with the addition of an encoder \begin{math}E(x) = z\end{math} that is connected with the generator input.
+The architecture proposed in this project is an adversarial anomaly detector inspired in the AnoGAN. This architecture is composed of the typical generator and discriminator of a common GAN, but with the addition of an encoder \begin{math}E(x) = z\end{math} that is connected with the generator input.
 
-The training process of this approach has two stages: First is the common training of a GAN model, but with just healthy images of tomato, and with the generation receiving as input random noise as latent variables. The second stage is the training of an encoder that shall be able to map to the latent space of the generator the necessary values to generate the most similar image from a query one.
+The training process of this approach has two stages: First is the common training of a GAN model, but with just healthy images of tomato, where the generator receives random noise as input for the latent variables. The second stage is the training of an encoder that shall be able to map to the latent space that the generator needs needs to reconstruct the query input image.
 
 In the training of the encoder, the generator and discriminator models are not trainables. Also, the hidden layers of the discriminator are used to extract features of the synthetic images and the input images. The goal is to train the encoder in a way that it makes that the generator creates images with similar features as the ones of the query image.
 
@@ -29,7 +29,7 @@ The proposed loss function for this anomaly detector model is the following:
  \mathcal{L}\left(\mathbf{E}(x)\right)=(1-\lambda) \cdot \mathcal{L}_{R}\left(\mathbf{E}(x)\right)+\lambda \cdot \mathcal{L}_{D}\left(\mathbf{E}(x)\right)
 \end{equation}
 
-where \begin{math}\lambda\end{math} represents the weights of the different termns of the function and \begin{math}\mathcal{L}_{R}\end{math} and \begin{math}\mathcal{L}_{D}\end{math} are defined as:
+where \begin{math}\lambda\end{math} represents the weights of the different terms of the function and \begin{math}\mathcal{L}_{R}\end{math} (reconstruction error) and \begin{math}\mathcal{L}_{D}\end{math} (discriminator error) are defined as:
 
 \begin{equation}
  \mathcal{L}_{R}\left(\mathbf{E}(x)\right)=\left\|\mathbf{x}-G\left(\mathbf{E}(x)\right)\right\|
