@@ -3,25 +3,25 @@
 
 \section{Data preprocessing}
 
-The data acquisition for this project has used a camera that captures in a resolution of 1920x1080. The tomato data was captured in tomato crops located in the Alajuela province of Costa Rica.
+The data acquired for this project used a camera of an iPhone 8 that captures in a resolution of 1920$\times$1080. The tomato data was captured in tomato crops located in the Alajuela province of Costa Rica (10$^{\circ}$01'39.2"N 84$^{\circ}$18'31.7"W). In the appendix \ref{ch:appendix} is described the capture protocole.
 
-For the purpose of the architectures experiment was used 191520 images of a dimension of 50x50 each. For this set of images, 80\% was used for testing and 20\% used for validation. This training validation data represents only healthy tomato plants. Also was used 798 images for testing and in this case, there are also unhealthy tomato photos.
+The comparison of anomaly detection models uses 191520 images with a size of 50$\times$50 each. For this set of images, 80\% was used for testing and 20\% used for validation. This training and validation data contains only healthy tomato plants. A set of 798 images is used for testing, and in this case, it also depicts unhealthy tomato plants.
 
-Before using these images for the training of the models, a normalization was applied to convert the image values to be in a range between -1 to 1. Finally, some image data augmentation like rotation, zoom, width shift, among other image transformations were implemented.
+Before using these images for training the models, a data normalization was applied to linearly map the image values to the range between -1 to 1. Additionally, image data augmentation as rotation, zoom, width shift, among other image transformations were implemented.
 
-\section{Architecture experiments}
+\section{Architecture experiment}
 
-In order to evaluate the different architectures for the anomaly detection in tomato plants, three experiments were proposed: one to explore the adversarial anomaly detector architecture, another to evaluate the spatial variational autoencoder and a third experiment to make use of the gaussian-mixture variational autoencoder.
+In order to evaluate the selected architectures for anomaly detection in tomato plants, an experiment of three architectures are proposed: one to explore the adversarial anomaly detector architecture, another to evaluate the spatial variational autoencoder and a third experiment to make use of the gaussian-mixture variational autoencoder.
 
-All the experiment used the same dataset and for each architecture is tested its reconstruction of an input image. The expected behavior here is that, as the model is only trained with healthy images of tomato, if some input image presents a possible disease, the model shouldn't be able to reconstruct the affected area, and that reconstruction error or dissimilarity shall be an indication of the presence of an anomaly.
+All the architectures use the same dataset and for each one its reconstruction of an input image is tested by measuring the distance between the original and reconstructed images using the mean square error (MSE). The expected behavior here is that, as the model is only trained with healthy images of tomato, if some input image presents a possible disease, the model should not be able to reconstruct the affected area, and that reconstruction error or dissimilarity is an indication of the presence of an anomaly.
 
 \section{Contribution}
 
-The architecture proposed in this project is an adversarial anomaly detector inspired in the AnoGAN. This architecture is composed of the typical generator and discriminator of a common GAN, but with the addition of an encoder \begin{math}E(x) = z\end{math} that is connected with the generator input.
+The architecture proposed in this project is an adversarial anomaly detector inspired in the AnoGAN. This architecture is composed of the typical generator and discriminator of a GAN, but with the addition of an encoder \begin{math}E(x) = z\end{math} that is connected with the generator input.
 
-The training process of this approach has two stages: First is the common training of a GAN model, but with just healthy images of tomato, where the generator receives random noise as input for the latent variables. The second stage is the training of an encoder that shall be able to map to the latent space that the generator needs needs to reconstruct the query input image.
+The training process of this approach has two stages: First the the GAN is trained with the conventional methods, but exclusivelly using healthy images of tomato, where the generator receives random noise as input for the latent variables. The second stage is training the encoder that has to learn how to map the query input image into the latent space.
 
-In the training of the encoder, the generator and discriminator models are not trainables. Also, the hidden layers of the discriminator are used to extract features of the synthetic images and the input images. The goal is to train the encoder in a way that it makes that the generator creates images with similar features as the ones of the query image.
+During training of the encoder, the generator and discriminator models remain unchanged. Also, the hidden layers of the discriminator are used to extract features of the synthetic images and the input images. The goal is to train the encoder in a way that it forces the generator to create images with similar features as the ones of the query image.
 
 The proposed loss function for this anomaly detector model is the following:
 
@@ -29,7 +29,7 @@ The proposed loss function for this anomaly detector model is the following:
  \mathcal{L}\left(\mathbf{E}(x)\right)=(1-\lambda) \cdot \mathcal{L}_{R}\left(\mathbf{E}(x)\right)+\lambda \cdot \mathcal{L}_{D}\left(\mathbf{E}(x)\right)
 \end{equation}
 
-where \begin{math}\lambda\end{math} represents the weights of the different terms of the function and \begin{math}\mathcal{L}_{R}\end{math} (reconstruction error) and \begin{math}\mathcal{L}_{D}\end{math} (discriminator error) are defined as:
+where \begin{math}\lambda\end{math} weights both terms of the function and $\mathbf{E}$ is the Encoder. \begin{math}\mathcal{L}_{R}\end{math} (reconstruction error) and \begin{math}\mathcal{L}_{D}\end{math} (discriminator error) are defined as:
 
 \begin{equation}
  \mathcal{L}_{R}\left(\mathbf{E}(x)\right)=\left\|\mathbf{x}-G\left(\mathbf{E}(x)\right)\right\|
@@ -41,4 +41,4 @@ where \begin{math}\lambda\end{math} represents the weights of the different term
 
 where \begin{math}\mathbf{f}(x)\end{math} represents the feature extractor of the discriminator.
 
-This approach overcomes one of the disadvantages of the AnoGAN that is its bad time performance. This modification of the AnoGAN architecture is similar to the one presented in \cite{Schlegl2019}.
+This approach overcomes one of the disadvantages of the AnoGAN that is its long computational time. This modification of the AnoGAN architecture is similar to the one presented in \cite{Schlegl2019}.
