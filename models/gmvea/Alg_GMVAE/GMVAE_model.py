@@ -24,6 +24,8 @@ import utils.constants as const
 from numpy.random import randn
 from numpy.random import randint
 
+import cv2
+
 class GMVAEModel(BaseModel):
     def __init__(self,network_params,sigma=0.001, sigma_act=tf.nn.softplus,
                  transfer_fct= tf.nn.relu,learning_rate=0.002,
@@ -248,14 +250,67 @@ class GMVAEModel(BaseModel):
             x_samples,  z_samples,  w_samples = self.model_graph.generate_samples(session, x_batch, beta=1, num_batches=num_batches)
             
             return x_samples,  z_samples, w_samples
+    
+    def eval_anomaly(self, test_img, session, anomaly_treshold = 4000):
+        test_samples = np.zeros([32,48,48,3])
+        for i, _ in enumerate(test_samples):
+            test_samples[i] = test_img
+    
+        # choose random instances
+        ix = randint(0, test_samples.shape[0], self.batch_size)
+        # select images
+        x_batch = test_samples[ix]
+        x_labels = np.zeros(x_batch.shape[0])
+        x_recons, z_recons, w_recons, y_recons = self.model_graph.reconstruct_input(session, x_batch, beta=1)
+        
+        original_x = ((test_img.reshape(48,48,3)*127.5)+127.5).astype(np.uint8)
+        similar_img = x_recons[0]
+        similar_img = (similar_img*127.5)+127.5
+        similar_img = similar_img.astype(np.uint8)
+        similar_img = cv2.cvtColor(similar_img, cv2.COLOR_BGR2RGB)
+    
+        score = np.sum((original_x.astype("float") - similar_img.astype("float")) ** 2)
+        score /= float(original_x.shape[0] * original_x.shape[1])
+    
+        has_anomaly = 0
+        if (score > anomaly_treshold):
+            has_anomaly = 1
+    
+        return (score, has_anomaly)
+    
+    def reconstruct_eval(self, dataset1, dataset2):
+        with tf.Session(graph=self.graph) as session:
+            saver = tf.train.Saver()
+            if(self.load(session, saver)):
+                num_epochs_trained = self.model_graph.cur_epoch_tensor.eval(session)
+                #print('EPOCHS trained: ', num_epochs_trained)
+            else:
+                return
             
-            
+            progress_bar = Progbar(target=(len(dataset1) + len(dataset2)))
+            regular_scores = np.zeros(len(dataset1))
+            ano_scores = np.zeros(len(dataset2))
+
+            # Eval the regual data
+            for i, img in enumerate(dataset1):
+                score, has_anomaly = self.eval_anomaly(img, session, anomaly_treshold=5000)
+                regular_scores[i] = score
+                progress_bar.update(i, values=[('score', score)])
+
+            # Eval the anomaly data
+            for i, img in enumerate(dataset2):
+                score, has_anomaly = self.eval_anomaly(img, session, anomaly_treshold=5000)
+                ano_scores[i] = score
+                progress_bar.update(i + len(dataset1), values=[('score', score)])
+        
+        return (regular_scores, ano_scores)
+    
     def reconstruct_input(self, data):
         with tf.Session(graph=self.graph) as session:
             saver = tf.train.Saver()
             if(self.load(session, saver)):
                 num_epochs_trained = self.model_graph.cur_epoch_tensor.eval(session)
-                print('EPOCHS trained: ', num_epochs_trained)
+                #print('EPOCHS trained: ', num_epochs_trained)
             else:
                 return
         
@@ -274,7 +329,7 @@ class GMVAEModel(BaseModel):
                             ' | KL_w: ' + str(KL_w) + \
                             ' | KL_y: ' + str(y_prior) + \
                             ' | L2_loss: '+  str(L2_loss)
-            print(valid_string)
+            #print(valid_string)
             
             return x_batch, x_labels, x_recons, z_recons, w_recons, y_recons 
         
