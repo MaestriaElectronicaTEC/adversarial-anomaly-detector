@@ -81,7 +81,7 @@ Using \begin{math}P(z | X)=\frac{P(X | z) P(z)}{P(X)}\end{math}, \ref{eq:dkl} ca
  \label{eq:vae_loss}
 \end{equation}
 
-The \begin{math}D_{KL}\end{math} is always positive, \ref{eq:vae_loss} can be written as:
+Since the \begin{math}D_{KL}\end{math} is always positive, \ref{eq:vae_loss} can be written as:
 
 \begin{equation}
  \log P(X) \geq \mathbb{E}[\log P(X | z)]-D_{KL}(Q(z | X) \| P(z))
