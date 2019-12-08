@@ -3,7 +3,7 @@
 %\documentclass[15pt,letterpaper,handout]{beamer} % [12pt]
 
 %\usepackage{fontspec}
-\usepackage[spanish]{babel}
+\usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{textcomp}
 \usepackage{multicol}
@@ -23,11 +23,11 @@
 %\usetheme{Madrid}
 
 % What is this all about:
-\title[Título corto en cada imagen]{Título completo \\ con eventualmente otra línea}
-\subtitle{Un subtítulo es posible pero no obligatorio}
+\title[Adversarial Anomaly detector]{Adversarial Anomaly Detector}
+\subtitle{Use of Generative Adversarial Networks for the detection of tomato diseases}
 \institute[TEC]{Escuela de Ingeniería Electrónica \\ Tecnológico de Costa Rica}
-\date[Mayo 2015]{28 Mayo, 2015}
-\author[J.\ Perez]{Ing.\ Juan Pérez Pérez}
+\date[Mayo 2015]{December 13th, 2019}
+\author[L.\ Murillo]{Ing.\ Luis Alonso Murillo Rojas}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  Notación
@@ -143,143 +143,221 @@
 \end{frame}
 
 
-\begin{frame}{Contenido}
+\begin{frame}{Content}
   \tableofcontents
 \end{frame}
 
 % Título para el contexto
-\section{Reconocimiento de formas}
+\section{Anomaly detection in tomato}
 
-\begin{frame}{Contexto}
-  \begin{itemize}
-  \item Máximo una transparencia con contexto
-  \item Preferible una imagen a texto
-    % Es mejor verbalmente explicar el contexto y tener tan solo
-    % una imagen ilustrativa
-  \end{itemize}
+\begin{frame}{Context}{\tiny{Tomato production}}
+\begin{figure}
+ \centering
+ \includegraphics[width=.8\textwidth]{tomato_metrics_per_year}
+ \tiny{\caption{Tomato production worldwide. Reprinted from Bergougnoux, V. (2014). The history of tomato: From domestication to biopharming. Biotechnology Advances.}}
+\end{figure}
+\end{frame} 
+
+\begin{frame}{Context}{\tiny{Tomato production}}
+ \begin{figure}
+ \centering
+ \includegraphics[width=.75\textwidth]{tomato_metrics_per_country}
+ \tiny{\caption{Tomato production per country. Reprinted from Bergougnoux, V. (2014). The history of tomato: From domestication to biopharming. Biotechnology Advances.}}
+\end{figure}
 \end{frame}
 
-\begin{frame}{Problema}
+
+\begin{frame}{Problem}
+  
+%\begin{block}{objetivo General}
+Diseases and pests in tomato crop, and the development of non-invasive systems for its early detection that mitigate the food security.
+%\end{block}
+\end{frame}
+
+\begin{frame}{Objectives}
+ \begin{block}{General objective}
+ Evaluation of different algorithms for anomaly
+detection, in the context of tomato images.
+ \end{block}
+\end{frame}
+
+
+\begin{frame}{Objetives}{\tiny{Specific objectives}}
   
   \begin{itemize}
-  \item Dependiendo del tema, combine con folio anterior
-  \item Explique problema concreto a resolver
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Objetivos}
-  
-  \begin{itemize}
-  \item Palabras clave de objetivo general
-  \item Objetivos específicos resumidos 
+  \item To design a dataset to train the machine learning models.
+  \item Selection of an anomaly detection algorithms.
+  \item To evaluate the selected methods for detection anomaly in tomato images.
   \end{itemize}
 \end{frame}
 
 
-\section{Solución}
+\section{Solution}
 
-\subsection{Segmentación de nematodos}
+\subsection{Anomaly detection with generative adversarial networks}
 
 
-\begin{frame}{Segmentación en dos niveles}{{\tiny{Olman Gómez, 2009}}}
+\begin{frame}{Anomaly detection with generative adversarial networks}{\tiny{Generative Adversarial Networks architecture}}
   % Coloque el diagrama de bloques detallado de su solución
-  \includegraphics[width=\textwidth]{gomezsegm_fixed}
-\end{frame}
-
-\begin{frame}{Bloques}
-  % Aproveche el medio visual para dejar clara LA IDEA (no hay tiempo
-  % para detalle teórico).
-  \begin{columns}
-    \column{.45\textwidth}
-    \begin{enumerate}
-    \item <1-| alert@1> Entrada
-    \item <2-| alert@2> Filtro Mediana
-    \item <3-| alert@3> Contraste
-    \item <4-| alert@4> Gradiente
-    \item <5-| alert@5> Estimación Umbral
-    \item <6-| alert@6> Cuencas
-    \item <7-| alert@6> Combinación
-    \end{enumerate}
-    \column{.5\textwidth}
-    \only<1>{\includegraphics[width=0.9\textwidth]{nematodos}}
-    \only<2>{\includegraphics[width=0.9\textwidth]{cwagm1}}
-    \only<3>{\includegraphics[width=0.9\textwidth]{cwagm2}}
-    \only<4>{\includegraphics[width=0.9\textwidth]{cwagm3}}
-    \only<5>{\includegraphics[width=0.9\textwidth]{cwagm2b}}
-    \only<6>{\includegraphics[width=0.9\textwidth]{cwagm4}}
-    \only<7>{\includegraphics[width=0.9\textwidth]{cwagm5}}
-  \end{columns}
-\end{frame}
-
-\section{Resultados}
-
-\begin{frame}{Algoritmo de segundo nivel}
+  \begin{figure}
+   \centering
+   \includegraphics[width=\textwidth]{gan}
+  \end{figure}
   
-  \begin{enumerate}
-  \item Características de Textura (IFLT, LBP)
-  \item Clasificadores neuronales (MLP, RBF), estadísticos (kNN)
-  \item Mezcla de clasificadores (AdaBoosting)
-  \end{enumerate}
+  \begin{equation}
+  \nonumber
+ \min _{G} \max _{D} V(D, G)=\mathbb{E}_{x \sim p_{\text {data }}(x)}[\log D(x)]+\mathbb{E}_{z \sim p_{z}(z)}[\log (1-D(G(z)))]
+\end{equation}
+\end{frame}
 
-  % PPV: valor predictivo positivo
-  %
-  % La matriz de confusión cruda corresponderá a la acumulación en cada ite-
-  % ración de la clasificación de las regiones de la imagen de validación,
-  % usando el clasificador entrenado con el resto de las imágenes.
-  %
-  % La matriz de sensibilidad da la probabilidad de que un objeto de
-  % determinada clase sea correctamente asignado.
-  % Se obtiene dividiendo los elementos de C cruda entre
-  % el número de objetos en la correspondiente clase verdadera.
-  %
-  % La matriz de valor predictivo positivo (PPV) da la probabilidad que un
-  % objeto asignado a una clase en realidad pertenezca a esa clase.
-  % Se obtiene dividiendo los elementos de cada fila entre el número total
-  % de objetos asignados a esa clase.
+\begin{frame}{Anomaly detection with generative adversarial networks}{\tiny{Adversarial Anomaly Detector architecture}}
+  % Coloque el diagrama de bloques detallado de su solución
+  \includegraphics[width=\textwidth]{adversarial_anomaly_detector}
+\end{frame}
 
-  \begin{center}
-    {\footnotesize Matrices de confusión para la combinación con}
+\begin{frame}{Anomaly detection with generative adversarial networks}{\tiny{Adversarial Anomaly Detector loss function}}
+ \begin{equation}
+ \nonumber
+ \mathcal{L}\left(\mathbf{E}(x)\right)=(1-\lambda) \cdot \mathcal{L}_{R}\left(\mathbf{E}(x)\right)+\lambda \cdot \mathcal{L}_{D}\left(\mathbf{E}(x)\right)
+\end{equation} 
 
-    {\footnotesize AdaBoost de MLP para la unión de descriptores con 
-      vecindario de 8 y 16}
-    \begin{tabular}{|c|cc|cc|cc|}
-      \hline
-      & \multicolumn{2}{c|}{Cruda} & \multicolumn{2}{c|}{Sensibilidad} & 
-      \multicolumn{2}{c|}{VPP} \\
-      \hline
-      Asignada$\backslash$Real& Fondo & Nem.& Fondo & Nem.& Fondo & Nem. \\
-      \hline
-      Fondo & 456 & 51 & 0,877 & 0,236 & 0,899 & 0,101 \\
-      Nematodo & 64 & 165 & 0,123 & 0,764 & 0,279 & 0,721 \\
-      \hline
-      & \multicolumn{6}{c|}{Precisión = 0,844}\\
-      \hline
+where the reconstruction error $\mathcal{L}_{R}$ and the discriminator error $\mathcal{L}_{D}$ are defined as follows:
+
+\begin{equation}
+ \nonumber
+ \mathcal{L}_{R}\left(\mathbf{E}(x)\right)=\left\|\mathbf{x}-G\left(\mathbf{E}(x)\right)\right\|
+\end{equation}
+
+\begin{equation}
+ \nonumber
+ \mathcal{L}_{D}\left(\mathbf{E}(x)\right)=\left\|\mathbf{f}(\mathbf{x})-\mathbf{f}\left(G\left(\mathbf{E}(x)\right)\right)\right\|
+\end{equation}
+
+\end{frame}
+
+\section{Results}
+
+\begin{frame}{GAN training}
+  \begin{figure}
+   \centering
+   \includegraphics[width=.75\textwidth]{gan_training}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Reconstruction evaluation}
+ \begin{table}
+    \centering
+    \caption[Reconstruction metric evaluation]{Reconstruction metric evaluation.}
+    \begin{tabular}{ c c c c c }
+        \hline
+        Model & Mean & STD & Mean & STD \\
+        & (healthy) & (healthy) & (anomalies) & (anomalies) \\
+        \hline
+        sVAE & 10410.6 & 7020.3 & 19858.8 & 18464.1 \\
+        GM-VAE & 15162.2 & 7597.3 & 9357.3 & 6071.7 \\
+        AAD & 3839.5 & 3251.1 & 8996.1 & 3308.8 \\
+        \hline
     \end{tabular}
-  \end{center}
+\end{table}
 \end{frame}
 
 
-\begin{frame}{Conclusiones}
+\begin{frame}{Reconstruction evaluation}
+ \begin{table}[htb]
+    \caption[Reconstruction time evaluation]{Reconstruction time evaluation.}
+    \label{table:rec_time}
+    \centering
+    \begin{tabular}{ c c c }
+        \hline
+        Model & Reconstruction time (ms) \\
+        \hline
+        sVAE & 160.8 \\
+        GM-VAE & 1383.1 \\
+        AnoGAN & 6320.6 \\
+        Adversarial Anomaly Detector & 255.3 \\
+        \hline
+    \end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Reconstruction evaluation}
+ \begin{figure}
+   \centering
+   \includegraphics[width=.85\textwidth]{rec_gmvae_eval}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Reconstruction evaluation}
+ \begin{figure}
+   \centering
+   \includegraphics[width=.85\textwidth]{rec_svae_eval}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Reconstruction evaluation}
+ \begin{figure}
+   \centering
+   \includegraphics[width=.85\textwidth]{rec_anogan_eval}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{t-SNE evaluation}
+ \begin{figure}
+  \centering
+  \includegraphics[width=.85\textwidth]{anogan_test_image1}
+  \caption{Test image with regular samples}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{t-SNE evaluation}
+ \begin{figure}
+  \centering
+  \includegraphics[width=.6\textwidth]{anogan_t_sne1}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{t-SNE evaluation}
+ \begin{figure}
+  \centering
+  \includegraphics[width=.85\textwidth]{anogan_test_image2}
+  \caption{Test image with anomalous samples}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{t-SNE evaluation}
+ \begin{figure}
+  \centering
+  \includegraphics[width=.6\textwidth]{anogan_t_sne2}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Conclusions}
   
   \begin{itemize}
-  \item Resuma las conclusiones y recomendaciones
-  \item No use texto completo sino únicamente palabras clave
+  \item The experiments performed so far have shown a tendency of the variational autoencoder
+architectures to blur the reconstructed image
+  \item  The GAN-based architectures have more
+promising results with better reconstruction images
+  \item A modification to the AnoGAN architecture is proposed, allowing to considerably improve
+the reconstruction time
   \end{itemize}
   
 \end{frame}
 
-\begin{frame}{Trabajo futuro}
+\begin{frame}{Future work}
   
   \begin{itemize}
-  \item Resuma ideas para trabajos futuros
+  \item Improve the generator of the GAN
+  \item Metrics that evaluate the GAN performance needs to be explored, along with more metrics for the evaluation of the anomaly detections
+  \item A segmentation process should be implemented in order to mark possible anomalous regions
   \end{itemize}
   
 \end{frame}
 
 
-\section{Resumen}
+\section{Summary}
 
-\begin{frame}{Resumen}
+\begin{frame}{Summary}
   \tableofcontents
 \end{frame}
 
