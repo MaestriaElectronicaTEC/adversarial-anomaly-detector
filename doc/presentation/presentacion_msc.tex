@@ -186,8 +186,8 @@ detection, in the context of tomato images.
   
   \begin{itemize}
   \item To design a dataset to train the machine learning models.
-  \item Selection of an anomaly detection algorithms.
-  \item To evaluate the selected methods for detection anomaly in tomato images.
+  \item Selection of anomaly detection algorithms.
+  \item To evaluate the selected methods for anomaly detection in tomato images.
   \end{itemize}
 \end{frame}
 
@@ -200,7 +200,7 @@ detection, in the context of tomato images.
 \begin{frame}{Anomaly detection with generative adversarial networks}{\tiny{Generative Adversarial Networks architecture}}
   % Coloque el diagrama de bloques detallado de su solución
   \begin{figure}
-   \centering
+   \centering 
    \includegraphics[width=\textwidth]{gan}
   \end{figure}
   
@@ -236,6 +236,19 @@ where the reconstruction error $\mathcal{L}_{R}$ and the discriminator error $\m
 \end{frame}
 
 \section{Results}
+
+
+\begin{frame}{GAN training}
+ \begin{itemize}
+  \item 191520 images were used for training and 798 for testing.
+  \item Each image is RGB and has a dimension of 50$\times$50.
+  \item The training set is composed with only healty samples of tomato.
+  \item To get a good performance of the model, the training of it took around 20 epochs.
+ \end{itemize}
+
+\end{frame}
+
+
 
 \begin{frame}{GAN training}
   \begin{figure}
@@ -282,24 +295,6 @@ where the reconstruction error $\mathcal{L}_{R}$ and the discriminator error $\m
 
 
 \begin{frame}{Reconstruction evaluation}
- \begin{table}[htb]
-    \caption[Reconstruction time evaluation]{Reconstruction time evaluation.}
-    \label{table:rec_time}
-    \centering
-    \begin{tabular}{ c c c }
-        \hline
-        Model & Reconstruction time (ms) \\
-        \hline
-        sVAE & 160.8 \\
-        GM-VAE & 1383.1 \\
-        AnoGAN & 6320.6 \\
-        Adversarial Anomaly Detector & 255.3 \\
-        \hline
-    \end{tabular}
-\end{table}
-\end{frame}
-
-\begin{frame}{Reconstruction evaluation}
  \begin{figure}
    \centering
    \includegraphics[width=.85\textwidth]{rec_gmvae_eval}
@@ -318,6 +313,24 @@ where the reconstruction error $\mathcal{L}_{R}$ and the discriminator error $\m
    \centering
    \includegraphics[width=.85\textwidth]{rec_anogan_eval}
   \end{figure}
+\end{frame}
+
+\begin{frame}{Reconstruction evaluation}
+ \begin{table}[htb]
+    \caption[Reconstruction time evaluation]{Reconstruction time evaluation.}
+    \label{table:rec_time}
+    \centering
+    \begin{tabular}{ c c c }
+        \hline
+        Model & Reconstruction time (ms) \\
+        \hline
+        sVAE & 160.8 \\
+        GM-VAE & 1383.1 \\
+        AnoGAN & 6320.6 \\
+        Adversarial Anomaly Detector & 255.3 \\
+        \hline
+    \end{tabular}
+\end{table}
 \end{frame}
 
 \begin{frame}{t-SNE evaluation}
@@ -366,9 +379,9 @@ the reconstruction time
 \begin{frame}{Future work}
   
   \begin{itemize}
-  \item Improve the generator of the GAN
-  \item Metrics that evaluate the GAN performance needs to be explored, along with more metrics for the evaluation of the anomaly detections
-  \item A segmentation process should be implemented in order to mark possible anomalous regions
+  \item Improve the generator of the GAN.
+  \item Metrics that evaluate the GAN performance need to be explored, along with more metrics for the evaluation of the anomaly detector.
+  \item A segmentation process should be implemented in order to mark possible anomalous regions.
   \end{itemize}
   
 \end{frame}
