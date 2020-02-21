@@ -1,0 +1,297 @@
+% Package with commands used in Tec Scripts
+
+% ---------------------
+% Comments and To-Dos:
+% --------------------
+%
+% All following commands are activated only with [todo] option, i.e. these
+% comments will be hide if the [todo] option is not given.  A list of TODOs
+% will be done to facilitate finding the stuff to be done.
+%
+% \boxcomment{comment}        Create a box on the margin of the page with 
+%                             the given command inside.
+%
+% \explain{comment}           Create a box on the margin of the page with 
+%                             the given command inside, with a curved arrow
+%                             to the left side, indicating "to be reviewed".
+%
+% \chk{comment}               Create a box on the margin of the page with 
+%                             the given command inside and with a check mark
+%
+% \TODO{comment}              Create a big box with the given text in a gray
+%                             background.
+%
+% ---------------------
+% Commands for indexing:
+% ---------------------
+%
+% \newterm{index-entry}{term}
+%    sets term in emphasized style and adds a bold-face entry
+%    to the index file
+%
+% \newtermnoindex{term}
+%    sets term in emphasized style, but does not add an entry to
+%    the index file.
+%
+% \oldterm{index-entry}{term}
+%    sets term in the default style, but adds an entry to the index
+%    file.
+%
+% \nt{term}
+%    is equivalent to \newterm{term}{term}
+%
+% \nt[index]{term}
+%    is equivalent to \newterm{index}{term}
+%
+% \ot{term}
+%    is equivalent to \oldterm{term}{term}
+%
+% \ot[index]{term}
+%    is equivalent to \oldterm{index}{term}
+%
+% \maindex{index-entry}
+%    adds a main-entry to the index file (boldface), but does
+%    not produce any output on the page
+%
+% ---------------------
+% Environments
+% ---------------------
+% narrowenum DEPRECATED use paralist's compactenum
+% narrowitems DEPRECATED use paralist's compactitem
+% narrowdescription
+% definition
+% example
+% 
+
+% Package-Header
+\NeedsTeXFormat{LaTeX2e}[1995/06/01]
+\ProvidesPackage{sty/tecStyle}[2004/12/21 v0.2 tecStyle]
+
+% Other packages
+
+\RequirePackage{xifthen}
+
+\RequirePackage[usenames,dvipsnames]{xcolor}
+\RequirePackage{theorem}    % for theorems, definitions and so on
+% different languages
+%\RequirePackage[spanish]{babel}
+
+\message{2009/02/15 tecStyle}
+
+% Suppress something
+\newcommand{\suppress}[1]{}
+
+% Abbreviations
+
+\iflanguage{english}{
+% some abbreviations
+\newcommand{\examplename}{Example}
+\newcommand{\examplelistname}{Example list}
+\newcommand{\examplesolution}{Solution}
+\newcommand{\ie}{i.\,e.\ }
+\newcommand{\etal}{et al.\ }
+\newcommand{\eg}{e.\,g.\ }
+\newcommand{\etc}{etc.\ }
+\newcommand{\quot}[1]{``#1''}             % normal quotation
+\newcommand{\dqt}[1]{\quot{#1}}
+}{}
+
+\iflanguage{spanish}{
+% algunas abreviaciones
+\newcommand{\examplename}{Ejemplo}
+\newcommand{\examplelistname}{Índice de ejemplos}
+\newcommand{\examplesolution}{Solución}
+\newcommand{\etal}{et al.\ }
+\newcommand{\etc}{etc.\ }
+\newcommand{\quot}[1]{``#1''}             % normal quotation
+\newcommand{\dqt}[1]{\quot{#1}}
+}{}
+
+% todo-command + requirements 
+\newcommand{\leftmarginlabel}{%
+  \makebox[\marginparwidth]{\hfill\rule{1ex}{1em}}}
+\newcommand{\rightmarginlabel}[1]{%
+  \makebox[\marginparwidth]{\rule{1ex}{1em}\hfill}}
+
+% enumeration labels
+\renewcommand{\theenumi}{\arabic{enumi}}
+\renewcommand{\theenumii}{\arabic{enumi}.\arabic{enumii}}
+\renewcommand{\theenumiii}{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}}
+\renewcommand{\theenumiv}{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}}
+
+\renewcommand{\labelenumi}{\theenumi.}
+\renewcommand{\labelenumii}{\theenumii.}
+\renewcommand{\labelenumiii}{\theenumiii.}
+\renewcommand{\labelenumiv}{\theenumiv.}
+
+\renewcommand{\p@enumi}{}
+\renewcommand{\p@enumii}{\theenumi.}
+\renewcommand{\p@enumiii}{\theenumii.}
+\renewcommand{\p@enumiv}{\theenumiii.}
+
+% Formatting commands
+\newcommand{\logic}[1]{\textsf{#1}}
+\newcommand{\engl}[1]{\textsl{#1}}
+\newcommand{\tbt}[1]{{\small{\ensuremath{\text{\textsf{#1}}}}}}
+\newcommand{\alignedpar}{\begingroup\parfillskip=0pt\par\endgroup}
+\newcommand{\equ}[1]{(\ref{#1})}
+
+% New Environments
+% \newenvironment{narrowitems}[1][-1.75ex]{% 
+%   \begin{itemize}% 
+%   \vskip #1\nobreak 
+%   \setlength{\parsep}{0.0pt}
+%   %\setlength{\parskip}{0.0pt}
+%   \setlength{\itemsep}{0.0pt}% 
+% }{% 
+% \end{itemize}% 
+% } 
+
+
+% \newenvironment{narrowenum}[1][-1.75ex]{% 
+%   \begin{enumerate}% 
+%   \vskip #1\nobreak 
+%   \setlength{\parsep}{0.0pt}
+%   \setlength{\parskip}{0.0pt}
+%   \setlength{\itemsep}{0.0pt}% 
+% }{% 
+% \end{enumerate}% 
+% }
+
+\newenvironment{narrowdescription}[1][-1.75ex]{% 
+  \begin{description}% 
+  \vskip #1\nobreak 
+  \setlength{\parsep}{0.0pt}
+  \setlength{\parskip}{0.0pt}
+  \setlength{\itemsep}{0.0pt}% 
+}{% 
+\end{description}% 
+} 
+
+% Environment for Definitions
+\newcounter{Def}
+\theoremstyle{plain}
+\newtheorem{definition}[Def]{Definición}
+
+
+% Indexing support
+
+% Conditional italics: Use textbf if already in textbf, use textit otherwise
+\newcommand{\condemph}[1]{%
+  \ifthenelse{\equal{\f@series}{\bfdefault}}{%
+    \textbf{#1}}{%
+    \emph{#1}}}%
+\newcommand{\newterm}[2]{\condemph{#2}\index{#1}} %% after #1 |textbf
+\newcommand{\newtermnoindex}[1]{\condemph{#1}}
+\newcommand{\oldterm}[2]{#2\index{#1}}
+\newcommand{\oldtermemph}[2]{\condemph{#2}\index{#1}}
+\newcommand{\nt}[2][foo]{\ifthenelse{\equal{#1}{foo}}{%
+    \newterm{#2}{#2}}{\newterm{#1}{#2}}}%
+\newcommand{\ntni}[1]{\newtermnoindex{#1}}
+\newcommand{\ot}[2][foo]{\ifthenelse{\equal{#1}{foo}}{%
+    \oldterm{#2}{#2}}{\oldterm{#1}{#2}}}%
+\newcommand{\maindex}[1]{\index{#1|textbf}}
+
+% Comments and To-do
+
+\newcommand{\boxcomment}[1]{}
+\newcommand{\explain}[1]{}
+\newcommand{\chk}[1]{}
+\newcommand{\todohdr}{Por hacer:}
+\newcommand{\TODO}[2][\todohdr]{}
+
+\definecolor{todocolor}{gray}{0.6}
+\definecolor{dkred}{rgb}{0.5,0,0}       %   dark red
+\definecolor{dkgreen}{rgb}{0,0.3,0}     %   dark green
+\definecolor{dkblue}{rgb}{0,0.0,0.5}    %   dark blue
+\definecolor{dkgray}{gray}{0.4}         %   dark gray
+\definecolor{dkmagenta}{rgb}{0.3,0.0,0.3} % dark magenta
+\definecolor{ltyellow}{rgb}{1.0,1.0,0.7}  % light yellow
+
+\newcommand{\bG}[1]{\textcolor{dkgreen}{\textbf{#1}}}
+\newcommand{\bR}[1]{\textcolor{dkred}{\textbf{#1}}}
+\newcommand{\bB}[1]{\textcolor{dkblue}{\textbf{#1}}}
+\newcommand{\bM}[1]{\textcolor{dkmagenta}{\textbf{#1}}}
+\newcommand{\bY}[1]{\textcolor{dkyellow}{\textbf{#1}}}
+\newcommand{\bC}[1]{\textcolor{dkcyan}{\textbf{#1}}}
+
+\setlength{\marginparsep}{5pt}
+\setlength{\marginparwidth}{63pt}
+
+% Example environment
+\newcommand{\listofexamples}{%
+  \chapter*{\examplelistname}\@starttoc{xmp}%
+  \markboth{\examplelistname}{\examplelistname}%
+  \addcontentsline{toc}{chapter}{\examplelistname}%
+}
+
+\newcounter{nexample}[chapter]
+\renewcommand{\thenexample}{\thechapter.\arabic{nexample}}
+
+\newcommand{\exampleBegin}[1][nothing]{%
+  \refstepcounter{nexample}%
+  \ifthenelse{\equal{#1}{nothing}}{
+    \paragraph*{\examplename~\thenexample}
+  }{%\index{Beispiel!#1}%
+   \paragraph*{\examplename~\thenexample}
+   \addcontentsline{xmp}{example}{%
+   \numberline {\thenexample} #1}
+  }
+}
+
+\newcommand{\l@example}[2]{%
+  \@dottedtocline{2}{0em}{1cm}{#1}{#2}}
+
+\newcommand{\exampleEnd}[1][0mm]{\vspace{#1}%
+{\hfill\fbox{\tiny{\thenexample}}}}
+
+%\newcommand{\exampleEnd}[1][0mm]{\vspace{#1}%
+%{\hfill\fbox{\tiny{\examplename~\thenexample}}}}
+
+%\newcommand{\exampleEnd}[1][0mm]{\vspace{#1}{\rule{\columnwidth}{1pt}}}
+
+\newenvironment{example}[1][nothing]{
+  \exampleBegin[#1]
+}{
+  \exampleEnd
+}
+
+\newcommand{\esolution}{\textbf{\examplesolution}:\ }
+
+
+\DeclareOption{todo}{%
+\renewcommand{\boxcomment}[1]{
+  \marginpar[\fbox{\parbox[t]{2cm}{\raggedleft\hspace{0pt}\footnotesize\sffamily#1}}]%
+              {\fbox{\parbox[t]{2cm}{\raggedright\hspace{0pt}\footnotesize\sffamily#1}}}%
+    \addcontentsline{todo}{todo}{#1}
+}
+
+\renewcommand{\explain}[1]{
+    \marginpar[\fbox{\parbox[t]{2cm}{\raggedleft\hspace{0pt}\footnotesize\sffamily$\curvearrowleft$ #1}}]%
+              {\fbox{\parbox[t]{2cm}{\raggedright\hspace{0pt}\footnotesize\sffamily$\curvearrowleft$ #1}}}%
+    \addcontentsline{todo}{todo}{#1}
+}
+
+\renewcommand{\chk}[1]{
+    \marginpar[\fbox{\parbox[t]{2cm}{\raggedleft\hspace{0pt}\footnotesize\sffamily$\checkmark$ #1}}]%
+              {\fbox{\parbox[t]{2cm}{\raggedright\hspace{0pt}\footnotesize\sffamily$\checkmark$ #1}}}%
+    \addcontentsline{todo}{todo}{#1}
+}
+
+\renewcommand{\TODO}[2][\todohdr]{%
+\smallbreak\noindent\colorbox{todocolor}{%
+\begin{minipage}{1\linewidth}
+\textbf{#1}\par #2
+\end{minipage}}\addcontentsline{todo}{todo}{#1}}
+}
+
+\newcommand{\todoname}{Revisar}
+\newcommand{\listoftodo}{\chapter*{\todoname}\@starttoc{todo}\markboth{\todoname}{\todoname}\addcontentsline{toc}{chapter}{\todoname}}
+\newcommand*\l@todo[2]{\noindent\makebox[\linewidth]{#1\dotfill\makebox[2em][r]{#2}}\par}
+
+% New line type for Tabularx-Tabels
+\newcolumntype{Y}{>{\small\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\small\centering\arraybackslash}X}
+          
+\ProcessOptions
+

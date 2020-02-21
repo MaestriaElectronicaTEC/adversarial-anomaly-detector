@@ -1,0 +1,65 @@
+%% ---------------------------------------------------------------------------
+%% paNotation.tex
+%%
+%% Notation
+%%
+%% $Id: paNotation.tex,v 1.15 2004/03/30 05:55:59 alvarado Exp $
+%% ---------------------------------------------------------------------------
+
+\cleardoublepage
+\renewcommand{\nomname}{List of symbols and abbreviations}
+\markboth{\nomname}{\nomname}
+\renewcommand{\nompreamble}{\addcontentsline{toc}{chapter}{\nomname}%
+\setlength{\nomitemsep}{-\parsep}
+\setlength{\itemsep}{10ex}
+}
+
+%%
+% Símbolos en la notación general
+% (es posible poner la declaración en el texto
+%%
+
+\symg[t]{$\sys{\cdot}$}{Transformation performed by a system}
+\symg[yscalar]{$y$}{Scalar.}
+\symg[zconjugado]{$\conj{z}$}{Conjugate Complex of $z$}
+\symg[rcomplexreal]{$\Re(z)$ o $z_{\Re}$}{Real part of the complex number $z$}
+\symg[icompleximag]{$\Im(z)$ o $z_{\Im}$}{Imaginary part of the complex number $z$}
+\symg[jimaginario]{$j$}{$j=\sqrt{-1}$}
+\symg[xvector]{$\vct{x}$}{Vector. \newline\hspace{1mm}%
+  $\vct{x}=\left[ x_1 \; x_2 \; \ldots \; x_n \right]^T =
+  \begin{bmatrix}
+    x_1 \\ x_2 \\ \vdots \\ x_n
+  \end{bmatrix}$}
+
+\symg[amatrix]{$\mat{A}$}{Matrix. \newline\hspace{1mm}%
+  $\mat{A} =
+  \begin{bmatrix}
+    a_{11} & a_{12} & \cdots & a_{1m}\\
+    a_{21} & a_{22} & \cdots & a_{2m}\\
+    \vdots & \vdots & \ddots & \vdots\\
+    a_{n1} & a_{n2} & \cdots & a_{nm}\\
+  \end{bmatrix}$}
+
+\symg[C]{$\setC$}{Complex numbers set.}
+
+%%
+% Algunas abreviaciones
+%%
+
+\syma{MLP}{Multilayer perceptrons}
+\syma{CNN}{Convolutional Neural Networks}
+\syma{VAE}{Variational Autoencoder}
+\syma{sVAE}{Spatial Variational Autoencoder}
+\syma{GM-VAE}{Gaussian-Mixture Variational Autoencoder}
+\syma{GAN}{Generative Adversarial Networks}
+\syma{AAD}{Adversarial Anomaly Detector}
+\syma{KL}{Kullback-Leibler}
+\syma{MVN}{Matrix-variable normal distribution}
+\syma{STD}{Standard deviation}
+
+\printnomenclature[20mm]
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "paMain"
+%%% End:

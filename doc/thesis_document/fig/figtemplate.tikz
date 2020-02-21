@@ -1,0 +1,27 @@
+\documentclass[class=article,border=0pt]{standalone}
+\usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usepackage[american,siunitx]{circuitikz}
+
+\begin{document}
+\tikzset{component/.style={draw,thick,circle,fill=white,minimum size =0.75cm,inner sep=0pt}}
+
+\begin{circuitikz}[scale=1]
+  \draw (-1.5,0)
+  to [battery1,invert] node[below=30mm,left=1.0em,align=right] {$V_f$\\\SI{20}{\volt}} (-1.5,6)
+  to [short,i^>=$I_T$] node (N1) {} (0,6) to [short] (3,6)
+  to [R] node[above=15mm,right=0.5em,align=left] {$R_2$\\\SI{3.3}{\kilo\ohm}} node (B) {} (3,3)
+  to [R] node[above=15mm,right=0.5em,align=left] {$R_5$\\\SI{1}{\kilo\ohm}} (3,0)
+  to [short] (-1.5,0);
+  \draw (0,6)
+  to [R,*-] node[above=15mm,right=0.5em,align=left] {$R_1$\\\SI{2}{\kilo\ohm}} node (A) {} (0,3)
+  to [R,-*] node[above=15mm,right=0.5em,align=left] {$R_4$\\\SI{3.3}{\kilo\ohm}} (0,0)
+  node[rground] {};
+  \draw (A)
+  to [R,*-*] node[above=2em,left=10mm,align=center] {$R_3$\\\SI{1}{\kilo\ohm}} (B);
+  \node at (N1) [above]  {$N_1$};
+  \node at (A) [left]  {$N_2$};
+  \node at (B) [right] {$N_3$};
+\end{circuitikz}
+\end{document}
