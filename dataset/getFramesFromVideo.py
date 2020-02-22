@@ -5,9 +5,10 @@ import numpy as np
 import argparse
 import time
 import cv2
-import blurMeasure
 import matplotlib.pyplot as plt
 import glob
+
+from dataset.blurMeasure import getBlur
 
 def plotBlurStat (blur, x_label, y_label, plot_label, show, plotDir):
     # Graph information
@@ -39,7 +40,7 @@ def getFrames(video, interval, imgDir, treshold, showGraph):
         if intervalTime >= interval:
             dt_object = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            blur = blurMeasure.getBlur(gray)
+            blur = getBlur(gray)
             blurAcc.append(blur)
             start = time.time()
             
@@ -64,25 +65,8 @@ def getFrames(video, interval, imgDir, treshold, showGraph):
     plotBlurStat(blurAcc, 'Images', 'Blur', 'Blure measure', showGraph, video[0:-4])
         
     print('Average blur: ' + str(sum(blurAcc)/len(blurAcc)))
-    
-def main():
-    # Setup the command line arguments
-    parser = argparse.ArgumentParser(description='Script that get frames out of a video')
-    parser.add_argument('--video', help='Video path', default='')
-    parser.add_argument('--imgDir', help='Directory where the frame will be stored', default = './')
-    parser.add_argument('--interval', help='Interval time between frames', default=5,type=float)
-    parser.add_argument('--treshold', help='Treshold value for the blur in the frame', default=6, type=float)
-    parser.add_argument('--videoDir', help='Directory with a series of videos', default='')
-    parser.add_argument('--videoExtension', help='Extension of the videos to be processed', default='.MOV')
-    args = parser.parse_args()
-    
-    videoPath = str(args.video)
-    interval = float(args.interval)
-    imgDir = str(args.imgDir)
-    blurTreshold = float(args.treshold)
-    videoDir = str(args.videoDir)
-    videoExtension = str(args.videoExtension)
-    
+
+def process_video(videoPath, interval, imgDir, blurTreshold, videoDir, videoExtension):
     if videoDir != '':
         print('Processing the videos of the directory: ' + videoDir)
         plots = glob.glob(videoDir + '*.png')
@@ -94,6 +78,4 @@ def main():
                 getFrames(videoFile, interval, imgDir, blurTreshold, False)
     else:
         getFrames(videoPath, interval, imgDir, blurTreshold, True)
-    
-if __name__ == "__main__":
-    main()
+
