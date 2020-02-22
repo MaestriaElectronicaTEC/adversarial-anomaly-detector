@@ -71,9 +71,28 @@ def splitImageWithoutOverlap(imgPath, subsectionSize, distPath):
             imgPath = pathBase / imgName
             cv2.imwrite(str(imgPath), subimg)
 
-def processImages(imagesPath, subsectionSize, distPath, overlap):
+def process_image(imagePath, subsectionSize, distPath, overlap):
+    # verify the subsection size variable
+    if subsectionSize != None:
+        subsectionSize = tuple(subsectionSize)
+    else:
+        subsectionSize = (50, 50)
+
+    # apply or not the overlap durint the image generation
+    if overlap:
+        splitImage(imagePath, subsectionSize, str(distPath))
+    else:
+        splitImageWithoutOverlap(imagePath, subsectionSize, str(distPath))
+
+def process_images(imagesPath, subsectionSize, distPath, overlap):
     imgList = glob.glob(imagesPath + '*.png')
     pathBase = Path(distPath)
+
+    # verify the subsection size variable
+    if subsectionSize != None:
+        subsectionSize = tuple(subsectionSize)
+    else:
+        subsectionSize = (50, 50)
 
     # Process all the images in the specified path
     for img in imgList:
@@ -87,38 +106,3 @@ def processImages(imagesPath, subsectionSize, distPath, overlap):
             splitImage(img, subsectionSize, str(imgDistPath))
         else:
             splitImageWithoutOverlap(img, subsectionSize, str(imgDistPath))
-
-def main():
-    # Setup the command line arguments
-    parser = argparse.ArgumentParser(description='Script that splits an image into subsections')
-    parser.add_argument('--image', help='Image path', default='')
-    parser.add_argument('--images', help='Directory with a group of images', default='')
-    parser.add_argument('--overlap', help='Activate the overlapping of the generated images', default=False, action='store_true')
-    parser.add_argument('--distDir', help='Directory where the subsections will be stored', default = '')
-    parser.add_argument('--subsectionSize', help='Size of each subsection H x W (Default (50, 50))', nargs='+', type=int)
-    args = parser.parse_args()
-
-    # Init the variables
-    imagePath = str(args.image)
-    imagesPath = str(args.images)
-    distPath = str(args.distDir)
-    subsectionSize = (50, 50)
-    overlap = args.overlap
-    if args.subsectionSize != None:
-        subsectionSize = tuple(args.subsectionSize)
-
-    # Verify if the initial conditions are met
-    if (imagePath == '' or imagesPath == '') and distPath == '':
-        raise(RuntimeError("The minimun amount of arguments were not provided."))
-
-    # Process the variables
-    if imagePath != '':
-        if overlap:
-            splitImage(imagePath, subsectionSize, str(distPath))
-        else:
-            splitImageWithoutOverlap(imagePath, subsectionSize, str(distPath))
-    if imagesPath != '':
-        processImages(imagesPath, subsectionSize, distPath, overlap)
-
-if __name__ == "__main__":
-    main()
