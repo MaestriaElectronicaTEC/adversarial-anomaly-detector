@@ -174,8 +174,8 @@ class DCGAN(AbstractModel):
         pyplot.savefig(self._results_dir + '/generated_plot_%03d.png' % (step+1))
         pyplot.close()
         # save the generator model
-        g_model.save(self._results_dir + '/model_g_%03d.h5' % (step+1))
-        d_model.save(self._results_dir + '/model_d_%03d.h5' % (step+1))
+        self._generator.save(self._results_dir + '/model_g_%03d.h5' % (step+1))
+        self._discriminator.save(self._results_dir + '/model_d_%03d.h5' % (step+1))
 
     # create a line plot of loss for the gan and save to file
     def plot_history(self, d1_hist, d2_hist, g_hist, a1_hist, a2_hist):
