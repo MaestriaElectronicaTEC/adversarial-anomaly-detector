@@ -7,9 +7,9 @@ from models.DCGAN import DCGAN
 
 #----------------------------------------------------------------------------
 
-def train_gan(latent_dim, datadir, results_dir):
-    gan  = DCGAN(latent_dim, results_dir)
-    gan.preprocessing(datadir)
+def train_gan(latentDim, dataDir, resultsDir):
+    gan  = DCGAN(latentDim, resultsDir)
+    gan.preprocessing(dataDir)
     gan.train()
 
 #----------------------------------------------------------------------------
