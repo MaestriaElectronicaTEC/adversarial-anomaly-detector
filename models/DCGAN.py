@@ -108,9 +108,9 @@ class DCGAN(AbstractModel):
         return model
 
     # define the combined generator and discriminator model, for updating the generator
-    def define_gan(self, discriminator):
+    def define_gan(self):
         # make weights in the discriminator not trainable
-        discriminator.trainable = False
+        self._discriminator.trainable = False
         # connect them
         model = Sequential()
         # add generator
@@ -240,7 +240,7 @@ class DCGAN(AbstractModel):
                 y_gan = ones((n_batch, 1))
                 # update the generator via the discriminator's error
                 self._discriminator.trainable = False
-                g_loss = gan_model.train_on_batch(X_gan, y_gan)
+                g_loss = self._gan.train_on_batch(X_gan, y_gan)
                 # summarize loss on this batch
                 progress_bar.update(i, values=[('d1', d_loss1), ('d2', d_loss2), ('g', g_loss), ('a1', d_acc1), ('a2', d_acc2)])
                 # record history
