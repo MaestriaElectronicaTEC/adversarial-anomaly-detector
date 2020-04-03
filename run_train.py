@@ -7,10 +7,10 @@ from models.DCGAN import DCGAN
 
 #----------------------------------------------------------------------------
 
-def train_gan(latentDim, dataDir, resultsDir):
+def train_gan(latentDim, epochs, dataDir, resultsDir):
     gan  = DCGAN(latentDim, resultsDir)
     gan.preprocessing(dataDir)
-    gan.train()
+    gan.train(n_epochs=epochs)
 
 #----------------------------------------------------------------------------
 
@@ -30,6 +30,7 @@ def cmdline(argv):
     p = add_command(    'train_gan',            'Training of the DCGAN model.')
 
     p.add_argument(     '--latentDim',          help='Latent space dimension of the GAN\'s generator', type=int, default=100)
+    p.add_argument(     '--epochs',             help='Number of epochs for the training', type=int, default=20)
     p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
     p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
 
