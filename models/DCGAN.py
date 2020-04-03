@@ -1,5 +1,6 @@
 from models.BaseModel import AbstractModel
 
+import os
 from os import makedirs
 
 from random import seed
@@ -12,32 +13,31 @@ from numpy import ones
 from numpy.random import randn
 from numpy.random import randint
 
-from keras import backend as K
-from keras.datasets.mnist import load_data
-from keras.optimizers import Adam
-from keras.models import Sequential
-from keras.models import Model
-from keras.layers.core import Activation
-from keras.layers import Dense
-from keras.layers import Reshape
-from keras.layers import Flatten
-from keras.layers import Conv2D
-from keras.layers import Conv2DTranspose
-from keras.layers import LeakyReLU
-from keras.layers import BatchNormalization
-from keras.layers import Dropout
-from keras.layers import Input
-from keras.preprocessing.image import ImageDataGenerator
-from keras.initializers import RandomNormal
-from keras.utils. generic_utils import Progbar
-from keras.callbacks import EarlyStopping
+from tensorflow.keras import backend as K
+from tensorflow.keras.datasets.mnist import load_data
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Reshape
+from tensorflow.keras.layers import Flatten
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import Conv2DTranspose
+from tensorflow.keras.layers import LeakyReLU
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import Input
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.initializers import RandomNormal
+from tensorflow.keras.utils import Progbar
+from tensorflow.keras.callbacks import EarlyStopping
 
 from matplotlib import pyplot
 
 import sys
 sys.path.append('../utils')
 
-import PreProcessing
+from utils.PreProcessing import load_real_samples
 
 import warnings
 warnings.filterwarnings("ignore")
