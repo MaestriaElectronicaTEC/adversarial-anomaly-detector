@@ -194,6 +194,20 @@ class DCGAN(AbstractModel):
         pyplot.savefig(self._results_dir + '/plot_line_plot_loss.png')
         pyplot.close()
 
+    # combine images for visualization
+    def combine_images(self, generated_images):
+        num = generated_images.shape[0]
+        width = int(math.sqrt(num))
+        height = int(math.ceil(float(num)/width))
+        shape = generated_images.shape[1:4]
+        image = np.zeros((height*shape[0], width*shape[1], shape[2]),
+                         dtype=generated_images.dtype)
+        for index, img in enumerate(generated_images):
+            i = int(index/width)
+            j = index % width
+            image[i*shape[0]:(i+1)*shape[0], j*shape[1]:(j+1)*shape[1],:] = img[:, :, :]
+        return image
+
     #----------------------------------------------------------------------------
 
     def __init__(self, latent_dim, results_dir):
@@ -255,5 +269,30 @@ class DCGAN(AbstractModel):
             self.summarize_performance(epoch)
 
         self.plot_history(d1_hist, d2_hist, g_hist, a1_hist, a2_hist)
+
+    def plot(self):
+        # generate real smaples
+        dataset.reset()
+        img = combine_images(generate_real_samples(36)[0])
+        img = (img*127.5)+127.5
+        img = img.astype(np.uint8)
+        dataset.reset()
+        # save plot to file
+        pyplot.figure(num=0, figsize=(8, 8))
+        pyplot.title('Sample images')
+        pyplot.imshow(img, cmap=pyplot.cm.gray)
+        pyplot.savefig(self._results_dir + '/real_samples.png')
+        pyplot.close()
+
+        # generate sintetic samples
+        img2 = combine_images(generate_fake_samples(36)[0])
+        img2 = (img2*127.5)+127.5
+        img2 = img2.astype(np.uint8)
+        # save plot to file
+        pyplot.figure(num=0, figsize=(8, 8))
+        pyplot.title('Generated images')
+        pyplot.imshow(img, cmap=pyplot.cm.gray)
+        pyplot.savefig(self._results_dir + '/generated_samples.png')
+        pyplot.close()
 
     #----------------------------------------------------------------------------

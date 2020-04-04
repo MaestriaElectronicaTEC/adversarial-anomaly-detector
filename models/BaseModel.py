@@ -13,3 +13,7 @@ class AbstractModel:
     @abstractmethod
     def train(self, n_epochs, n_batch):
         pass
+
+    @abstractmethod
+    def plot(self):
+        pass
