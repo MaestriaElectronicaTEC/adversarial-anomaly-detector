@@ -145,6 +145,7 @@ class AAD(AbstractModel):
     def train(self, n_epochs, n_batch):
         # prepare lists for storing stats each iteration
         loss_hist, rec_loss_hist, disc_loss_hist = list(), list(), list()
+        loss, rec_loss, disc_loss = 0, 0, 0
         # manually enumerate epochs
         for epoch in range(n_epochs):
             print ("Epoch:", epoch)
@@ -159,10 +160,11 @@ class AAD(AbstractModel):
 
                 # summarize loss on this batch
                 progress_bar.update(i, values=[('loss', loss), ('rec loss', rec_loss), ('disc loss', disc_loss)])
-                # record history
-                loss_hist.append(loss)
-                rec_loss_hist.append(rec_loss)
-                disc_loss_hist.append(disc_loss)
+
+            # record history
+            loss_hist.append(loss)
+            rec_loss_hist.append(rec_loss)
+            disc_loss_hist.append(disc_loss)
 
             print ('')
             dataset.on_epoch_end()

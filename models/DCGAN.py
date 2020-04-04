@@ -233,6 +233,7 @@ class DCGAN(AbstractModel):
         half_batch = int(n_batch / 2)
         # prepare lists for storing stats each iteration
         d1_hist, d2_hist, g_hist, a1_hist, a2_hist = list(), list(), list(), list(), list()
+        d_loss1, d_loss2, g_loss, d_acc1, d_acc2 = 0, 0, 0, 0, 0
         # manually enumerate epochs
         for epoch in range(n_epochs):
             print ("Epoch:", epoch)
@@ -257,12 +258,13 @@ class DCGAN(AbstractModel):
                 g_loss = self._gan.train_on_batch(X_gan, y_gan)
                 # summarize loss on this batch
                 progress_bar.update(i, values=[('d1', d_loss1), ('d2', d_loss2), ('g', g_loss), ('a1', d_acc1), ('a2', d_acc2)])
-                # record history
-                d1_hist.append(d_loss1)
-                d2_hist.append(d_loss2)
-                g_hist.append(g_loss)
-                a1_hist.append(d_acc1)
-                a2_hist.append(d_acc2)
+
+            # record history
+            d1_hist.append(d_loss1)
+            d2_hist.append(d_loss2)
+            g_hist.append(g_loss)
+            a1_hist.append(d_acc1)
+            a2_hist.append(d_acc2)
 
             print ('')
             self._dataset.on_epoch_end()
