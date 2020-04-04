@@ -12,6 +12,19 @@ def train_gan(latentDim, epochs, dataDir, resultsDir):
     gan.preprocessing(dataDir)
     gan.train(n_epochs=epochs)
 
+def train_anomaly_detector(generatorDir, discriminatorDir, latentDim, epochs, dataDir, resultsDir):
+    modelDir = {
+        "generator": generatorDir,
+        "discriminator": discriminatorDir
+    }
+
+    gan  = DCGAN(100, resultsDir)
+    gan.load(modelDir)
+
+    anomaly_detector = AAD(gan.get_generator(), gan.get_discriminator(), latentDim, epochs, resultsDir)
+    anomaly_detector.preprocessing(dataDir)
+    anomaly_detector.train(n_epochs=epochs)
+
 #----------------------------------------------------------------------------
 
 def cmdline(argv):
@@ -29,6 +42,15 @@ def cmdline(argv):
 
     p = add_command(    'train_gan',            'Training of the DCGAN model.')
 
+    p.add_argument(     '--latentDim',          help='Latent space dimension of the GAN\'s generator', type=int, default=100)
+    p.add_argument(     '--epochs',             help='Number of epochs for the training', type=int, default=20)
+    p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
+    p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
+
+    p = add_command(    'train_anomaly_detector','Training of the Adversarial Anomaly Detector model.')
+
+    p.add_argument(     '--generatorDir',       help='Path of the generator h5 file', default='')
+    p.add_argument(     '--discriminatorDir',   help='Path of the discriminator h5 file', default='')
     p.add_argument(     '--latentDim',          help='Latent space dimension of the GAN\'s generator', type=int, default=100)
     p.add_argument(     '--epochs',             help='Number of epochs for the training', type=int, default=20)
     p.add_argument(     '--dataDir',            help='Path of the dataset', default='')

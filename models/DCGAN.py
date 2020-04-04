@@ -295,4 +295,10 @@ class DCGAN(AbstractModel):
         pyplot.savefig(self._results_dir + '/generated_samples.png')
         pyplot.close()
 
+    def get_generator(self):
+        return self._generator
+
+    def get_discriminator(self):
+        return self._discriminator
+
     #----------------------------------------------------------------------------

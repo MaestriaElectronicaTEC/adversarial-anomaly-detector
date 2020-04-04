@@ -11,7 +11,7 @@ def generate_samples(generatorDir, discriminatorDir, dataDir, resultsDir):
     modelDir = {
         "generator": generatorDir,
         "discriminator": discriminatorDir
-}
+    }
 
     gan  = DCGAN(100, resultsDir)
     gan.load(modelDir)
