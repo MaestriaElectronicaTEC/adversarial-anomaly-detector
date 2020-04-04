@@ -4,6 +4,7 @@ import sys
 import argparse
 
 from models.DCGAN import DCGAN
+from models.AAD import AAD
 
 #----------------------------------------------------------------------------
 
@@ -18,10 +19,10 @@ def train_anomaly_detector(generatorDir, discriminatorDir, latentDim, epochs, da
         "discriminator": discriminatorDir
     }
 
-    gan  = DCGAN(100, resultsDir)
+    gan  = DCGAN(latentDim, resultsDir)
     gan.load(modelDir)
 
-    anomaly_detector = AAD(gan.get_generator(), gan.get_discriminator(), latentDim, epochs, resultsDir)
+    anomaly_detector = AAD(gan.get_generator(), gan.get_discriminator(), resultsDir, latentDim)
     anomaly_detector.preprocessing(dataDir)
     anomaly_detector.train(n_epochs=epochs)
 

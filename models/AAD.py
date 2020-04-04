@@ -1,6 +1,6 @@
 from models.BaseModel import AbstractModel
 
-import cv2
+#import cv2
 import os
 from os import makedirs
 
@@ -92,7 +92,7 @@ class AAD(AbstractModel):
     # anomaly detection model define
     def define_anomaly_detector(self):
         self._feature_extractor.trainable = False
-        g.trainable = False
+        self._generator.trainable = False
         # Encoder
         aInput = Input(shape=(48,48,3)) #TODO: Remove hardcoded dimensions
         x = Conv2D(64, (4,4), strides=(2,2), padding='same', trainable=True)(aInput)
@@ -111,9 +111,9 @@ class AAD(AbstractModel):
         x = Dropout(0.25)(x)
         # laten space
         x = Flatten()(x)
-        encoder = Dense(100, activation='sigmoid', trainable=True)(x)
+        encoder = Dense(self._latent_dimension, activation='sigmoid', trainable=True)(x)
         # G & D feature
-        G_out = g(encoder)
+        G_out = self._generator(encoder)
         D_out= self._feature_extractor(G_out)
         model = Model(inputs=aInput, outputs=[G_out, D_out])
         model.compile(loss=self.sum_of_residual, loss_weights= [self._reconstruction_error_factor, self._discrimnator_feature_error_factor], optimizer='adam')
@@ -124,14 +124,14 @@ class AAD(AbstractModel):
     #----------------------------------------------------------------------------
 
     def __init__(self, generator, discriminator, results_dir, latent_dimension=200):
+        self._reconstruction_error_factor = 0.90
+        self._discrimnator_feature_error_factor = 0.10
+        self._latent_dimension = latent_dimension
         self._generator = generator
         self._discriminator = discriminator
         self._feature_extractor = self.define_feature_extractor()
         self._anomaly_detector = self.define_anomaly_detector()
         self._results_dir = results_dir
-        self._latent_dimension = latent_dimension
-        self._reconstruction_error_factor = 0.90
-        self._discrimnator_feature_error_factor = 0.10
         # make folder for results
         makedirs(self._results_dir, exist_ok=True)
         super().__init__()
@@ -139,24 +139,24 @@ class AAD(AbstractModel):
     def load(self, model_dirs):
         self._anomaly_detector.load_weights(model_dirs)
 
-    def preprocessing(self, datadir, data_batch_size):
+    def preprocessing(self, datadir, data_batch_size=64):
         self._dataset = load_real_samples(datadir, data_batch_size)
 
-    def train(self, n_epochs, n_batch):
+    def train(self, n_epochs=10, n_batch=128):
         # prepare lists for storing stats each iteration
         loss_hist, rec_loss_hist, disc_loss_hist = list(), list(), list()
         loss, rec_loss, disc_loss = 0, 0, 0
         # manually enumerate epochs
         for epoch in range(n_epochs):
             print ("Epoch:", epoch)
-            n_iter = len(dataset)
+            n_iter = len(self._dataset)
             progress_bar = Progbar(target=n_iter)
             for i in range(n_iter):
                 # get randomly selected 'real' samples
-                x, _ = self.generate_real_samples(dataset, n_batch)
+                x, _ = self.generate_real_samples(n_batch)
 
                 d_x = self._feature_extractor.predict(x)
-                loss, rec_loss, disc_loss = self._anomaly_detector.train_on_batch(z, [x, d_x])
+                loss, rec_loss, disc_loss = self._anomaly_detector.train_on_batch(x, [x, d_x])
 
                 # summarize loss on this batch
                 progress_bar.update(i, values=[('loss', loss), ('rec loss', rec_loss), ('disc loss', disc_loss)])
