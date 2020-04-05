@@ -167,7 +167,7 @@ class AAD(AbstractModel):
             disc_loss_hist.append(disc_loss)
 
             print ('')
-            dataset.on_epoch_end()
+            self._dataset.on_epoch_end()
             self._anomaly_detector.save(self._results_dir + '/model_anomaly_%03d.h5' % (epoch+1))
 
     def plot(self):
