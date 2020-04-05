@@ -1,6 +1,6 @@
 from models.BaseModel import AbstractModel
 
-#import cv2
+import cv2
 import os
 from os import makedirs
 
@@ -169,6 +169,15 @@ class AAD(AbstractModel):
             print ('')
             self._dataset.on_epoch_end()
             self._anomaly_detector.save(self._results_dir + '/model_anomaly_%03d.h5' % (epoch+1))
+
+            # plot traning results
+            pyplot.plot(loss_hist, label='loss')
+            pyplot.plot(rec_loss_hist, label='reconstruction loss')
+            pyplot.plot(disc_loss_hist, label='discriminator loss')
+            pyplot.xlabel('Epochs')
+            # save plot to file
+            pyplot.savefig(self._results_dir + '/plot_line_aad_loss.png')
+            pyplot.close()
 
     def plot(self):
         test_img = self.generate_real_samples(1)[0]

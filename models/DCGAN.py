@@ -184,14 +184,16 @@ class DCGAN(AbstractModel):
         pyplot.plot(d1_hist, label='d-real')
         pyplot.plot(d2_hist, label='d-fake')
         pyplot.plot(g_hist, label='gen')
+        pyplot.xlabel('Epochs')
         pyplot.legend()
         # plot discriminator accuracy
         pyplot.subplot(2, 1, 2)
         pyplot.plot(a1_hist, label='acc-real')
         pyplot.plot(a2_hist, label='acc-fake')
+        pyplot.xlabel('Epochs')
         pyplot.legend()
         # save plot to file
-        pyplot.savefig(self._results_dir + '/plot_line_plot_loss.png')
+        pyplot.savefig(self._results_dir + '/plot_line_gan_loss.png')
         pyplot.close()
 
     # combine images for visualization
