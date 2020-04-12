@@ -132,6 +132,7 @@ class AAD(AbstractModel):
         self._feature_extractor = self.define_feature_extractor()
         self._anomaly_detector = self.define_anomaly_detector()
         self._results_dir = results_dir
+        self._metrics = None
         # make folder for results
         makedirs(self._results_dir, exist_ok=True)
         super().__init__()
@@ -170,14 +171,24 @@ class AAD(AbstractModel):
             self._dataset.on_epoch_end()
             self._anomaly_detector.save(self._results_dir + '/model_anomaly_%03d.h5' % (epoch+1))
 
-            # plot traning results
-            pyplot.plot(loss_hist, label='loss')
-            pyplot.plot(rec_loss_hist, label='reconstruction loss')
-            pyplot.plot(disc_loss_hist, label='discriminator loss')
-            pyplot.xlabel('Epochs')
-            # save plot to file
-            pyplot.savefig(self._results_dir + '/plot_line_aad_loss.png')
-            pyplot.close()
+        # save metrics
+        metrics = {
+            "loss_hist": loss_hist,
+            "rec_loss_hist": rec_loss_hist,
+            "disc_loss_hist": disc_loss_hist
+        }
+        self._metrics = metrics
+        # plot traning results
+        pyplot.plot(loss_hist, label='loss')
+        pyplot.plot(rec_loss_hist, label='reconstruction loss')
+        pyplot.plot(disc_loss_hist, label='discriminator loss')
+        pyplot.xlabel('Epochs')
+        # save plot to file
+        pyplot.savefig(self._results_dir + '/plot_line_aad_loss.png')
+        pyplot.close()
+
+    def get_metrics(self):
+        return self._metrics
 
     def plot(self):
         test_img = self.generate_real_samples(1)[0]

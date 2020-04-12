@@ -1,6 +1,7 @@
 """ Tool for training the models"""
 
 import sys
+import pickle
 import argparse
 
 from models.DCGAN import DCGAN
@@ -12,6 +13,8 @@ def train_gan(latentDim, epochs, dataDir, resultsDir):
     gan  = DCGAN(latentDim, resultsDir)
     gan.preprocessing(dataDir)
     gan.train(n_epochs=epochs)
+    # save the object state
+    pickle.dump( gan, open( resultsDir + "/gan.pkl", "wb" ) )
 
 def train_anomaly_detector(generatorDir, discriminatorDir, latentDim, epochs, dataDir, resultsDir):
     modelDir = {
@@ -25,6 +28,8 @@ def train_anomaly_detector(generatorDir, discriminatorDir, latentDim, epochs, da
     anomaly_detector = AAD(gan.get_generator(), gan.get_discriminator(), resultsDir, latentDim)
     anomaly_detector.preprocessing(dataDir)
     anomaly_detector.train(n_epochs=epochs)
+    # save the object state
+    pickle.dump( anomaly_detector, open( resultsDir + "/add.pkl", "wb" ) )
 
 #----------------------------------------------------------------------------
 

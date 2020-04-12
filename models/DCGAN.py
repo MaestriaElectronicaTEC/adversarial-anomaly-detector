@@ -179,6 +179,16 @@ class DCGAN(AbstractModel):
 
     # create a line plot of loss for the gan and save to file
     def plot_history(self, d1_hist, d2_hist, g_hist, a1_hist, a2_hist):
+        # save metrics 
+        metrics = {
+            "d1_hist": d1_hist,
+            "d2_hist": d2_hist,
+            "g_hist": g_hist,
+            "a1_hist": a1_hist,
+            "a2_hist": a2_hist
+        }
+        self._metrics = metrics
+
         # plot loss
         pyplot.subplot(2, 1, 1)
         pyplot.plot(d1_hist, label='d-real')
@@ -218,6 +228,7 @@ class DCGAN(AbstractModel):
         self._discriminator = self.define_discriminator()
         self._gan = self.define_gan()
         self._results_dir = results_dir
+        self._metrics = None
         # make folder for results
         makedirs(self._results_dir, exist_ok=True)
         super().__init__()
@@ -273,6 +284,9 @@ class DCGAN(AbstractModel):
             self.summarize_performance(epoch)
 
         self.plot_history(d1_hist, d2_hist, g_hist, a1_hist, a2_hist)
+
+    def get_metrics(self):
+        return self._metrics
 
     def plot(self):
         # generate real smaples

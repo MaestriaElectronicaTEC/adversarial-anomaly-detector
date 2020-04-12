@@ -15,5 +15,9 @@ class AbstractModel:
         pass
 
     @abstractmethod
+    def get_metrics(self):
+        pass
+
+    @abstractmethod
     def plot(self):
         pass
