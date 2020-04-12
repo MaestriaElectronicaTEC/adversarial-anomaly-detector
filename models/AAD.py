@@ -123,9 +123,9 @@ class AAD(AbstractModel):
 
     #----------------------------------------------------------------------------
 
-    def __init__(self, generator, discriminator, results_dir, latent_dimension=200):
-        self._reconstruction_error_factor = 0.90
-        self._discrimnator_feature_error_factor = 0.10
+    def __init__(self, generator, discriminator, results_dir, latent_dimension=200, r_error=0.90, d_error=0.10):
+        self._reconstruction_error_factor = r_error
+        self._discrimnator_feature_error_factor = d_error
         self._latent_dimension = latent_dimension
         self._generator = generator
         self._discriminator = discriminator
