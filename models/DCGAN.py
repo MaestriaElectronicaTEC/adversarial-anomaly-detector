@@ -204,7 +204,7 @@ class DCGAN(AbstractModel):
         pyplot.xlabel('Epochs')
         pyplot.legend()
         # save plot to file
-        pyplot.savefig(self._results_dir + '/plot_line_gan_loss.png')
+        pyplot.savefig(self._results_dir + '/plot_line_gan_loss.pdf')
         pyplot.close()
 
     # combine images for visualization

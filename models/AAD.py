@@ -184,7 +184,7 @@ class AAD(AbstractModel):
         pyplot.plot(disc_loss_hist, label='discriminator loss')
         pyplot.xlabel('Epochs')
         # save plot to file
-        pyplot.savefig(self._results_dir + '/plot_line_aad_loss.png')
+        pyplot.savefig(self._results_dir + '/plot_line_aad_loss.pdf')
         pyplot.close()
 
     def get_metrics(self):
@@ -209,11 +209,11 @@ class AAD(AbstractModel):
         pyplot.figure(3, figsize=(3, 3))
         pyplot.title('Original')
         pyplot.imshow(cv2.cvtColor(test_img2[0],cv2.COLOR_BGR2RGB))
-        pyplot.savefig(self._results_dir + '/original_sample.png')
+        pyplot.savefig(self._results_dir + '/original_sample.pdf')
 
         pyplot.figure(3, figsize=(3, 3))
         pyplot.title('Reconstructed')
         pyplot.imshow(cv2.cvtColor(res2[0],cv2.COLOR_BGR2RGB))
-        pyplot.savefig(self._results_dir + '/reconstructed_sample.png')
+        pyplot.savefig(self._results_dir + '/reconstructed_sample.pdf')
 
 #----------------------------------------------------------------------------
