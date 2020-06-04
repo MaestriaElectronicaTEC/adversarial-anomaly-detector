@@ -36,6 +36,7 @@ from tensorflow.keras.utils import Progbar
 
 from matplotlib import pyplot
 
+from sklearn.manifold import TSNE
 import sys
 sys.path.append('../utils')
 
@@ -242,5 +243,26 @@ class AAD(AbstractModel):
         print('Anomalies:', len(anomaly))
         print('Normal:', len(normal))
         return (normal, anomaly)
+
+    def t_sne_analisys(self, normal, anomaly):
+        random_image = np.random.uniform(0, 1, (100, 48, 48, 3))
+
+        # intermidieate output of discriminator
+        feature_map_of_random = self._feature_extractor.predict(random_image, verbose=1)
+        feature_map_of_tomato = self._feature_extractor.predict(anomaly, verbose=1)
+        feature_map_of_tomato_1 = self._feature_extractor.predict(normal, verbose=1)
+
+        # t-SNE for visulization
+        output = np.concatenate((feature_map_of_random, feature_map_of_tomato, feature_map_of_tomato_1))
+        output = output.reshape(output.shape[0], -1)
+
+        X_embedded = TSNE(n_components=2).fit_transform(output)
+        pyplot.figure(5, figsize=(15, 15))
+        pyplot.title("t-SNE embedding on the feature representation")
+        pyplot.scatter(X_embedded[:100,0], X_embedded[:100,1], label='random noise(anomaly)')
+        pyplot.scatter(X_embedded[100:(100 + len(anomaly)),0], X_embedded[100:(100 + len(anomaly)),1], label='tomato(anomaly)')
+        pyplot.scatter(X_embedded[(100 + len(anomaly)):,0], X_embedded[(100 + len(anomaly)):,1], label='tomato(normal)')
+        pyplot.legend()
+        pyplot.savefig(self._results_dir + '/t_sne_results.pdf')
 
 #----------------------------------------------------------------------------

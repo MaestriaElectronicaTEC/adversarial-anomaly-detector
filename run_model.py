@@ -45,7 +45,9 @@ def analyze_anomalies(generatorDir, discriminatorDir, anomalyDetectorDir, latent
 
     anomaly_detector = AAD(gan.get_generator(), gan.get_discriminator(), resultsDir, latentDim)
     anomaly_detector.load(anomalyDetectorDir)
-    anomaly_detector.analize_anomalies(load_test_data(dataDir), anomalyTreshold)
+
+    normal, anomaly = anomaly_detector.analize_anomalies(load_test_data(dataDir), anomalyTreshold)
+    anomaly_detector.t_sne_analisys(normal, anomaly)
 
 #----------------------------------------------------------------------------
 
