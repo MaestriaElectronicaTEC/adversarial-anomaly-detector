@@ -32,6 +32,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.utils import Progbar
 from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.utils import Progbar
 
 from matplotlib import pyplot
 
@@ -215,5 +216,31 @@ class AAD(AbstractModel):
         pyplot.title('Reconstructed')
         pyplot.imshow(cv2.cvtColor(res2[0],cv2.COLOR_BGR2RGB))
         pyplot.savefig(self._results_dir + '/reconstructed_sample.pdf')
+
+    def analize_anomalies(self, test_data, anomaly_treshold):
+        normal = list()
+        anomaly = list()
+        progress_bar = Progbar(target=test_data.shape[0])
+
+        for i, img in enumerate(test_data):
+            test_img = np.asarray([img])
+            #res = anomaly_detector.predict(test_img)
+            d_x = self._feature_extractor.predict(test_img)
+            scores = self._anomaly_detector.evaluate(test_img, [test_img, d_x], verbose=0, steps=1)
+
+            if scores[-1] < anomaly_treshold:
+                normal.append(img)
+            else:
+                anomaly.append(img)
+
+            progress_bar.update(i, values=[('e', scores[-1])])
+
+        normal = np.asarray(normal)
+        anomaly = np.asarray(anomaly)
+        
+        print('')
+        print('Anomalies:', len(anomaly))
+        print('Normal:', len(normal))
+        return (normal, anomaly)
 
 #----------------------------------------------------------------------------
