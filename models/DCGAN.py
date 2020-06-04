@@ -2,6 +2,7 @@ from models.BaseModel import AbstractModel
 
 import os
 from os import makedirs
+import math
 
 from random import seed
 from random import randint
@@ -290,27 +291,27 @@ class DCGAN(AbstractModel):
 
     def plot(self):
         # generate real smaples
-        dataset.reset()
-        img = combine_images(generate_real_samples(36)[0])
+        self._dataset.reset()
+        img = self.combine_images(self.generate_real_samples(36)[0])
         img = (img*127.5)+127.5
         img = img.astype(np.uint8)
-        dataset.reset()
+        self._dataset.reset()
         # save plot to file
         pyplot.figure(num=0, figsize=(8, 8))
         pyplot.title('Sample images')
         pyplot.imshow(img, cmap=pyplot.cm.gray)
-        pyplot.savefig(self._results_dir + '/real_samples.png')
+        pyplot.savefig(self._results_dir + '/real_samples.pdf')
         pyplot.close()
 
         # generate sintetic samples
-        img2 = combine_images(generate_fake_samples(36)[0])
+        img2 = self.combine_images(self.generate_fake_samples(36)[0])
         img2 = (img2*127.5)+127.5
         img2 = img2.astype(np.uint8)
         # save plot to file
         pyplot.figure(num=0, figsize=(8, 8))
         pyplot.title('Generated images')
-        pyplot.imshow(img, cmap=pyplot.cm.gray)
-        pyplot.savefig(self._results_dir + '/generated_samples.png')
+        pyplot.imshow(img2, cmap=pyplot.cm.gray)
+        pyplot.savefig(self._results_dir + '/generated_samples.pdf')
         pyplot.close()
 
     def get_generator(self):
