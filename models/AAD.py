@@ -122,6 +122,13 @@ class AAD(AbstractModel):
         # batchnorm learning phase fixed (test) : make non trainable
         K.set_learning_phase(0)
         return model
+    
+    def eval_anomaly(self, img):
+        test_img = np.asarray([img])
+        d_x = self._feature_extractor.predict(test_img)
+        scores = self._anomaly_detector.evaluate(test_img, [test_img, d_x], verbose=0, steps=1)
+        score = scores[-1]
+        return score
 
     #----------------------------------------------------------------------------
 
@@ -264,5 +271,68 @@ class AAD(AbstractModel):
         pyplot.scatter(X_embedded[(100 + len(anomaly)):,0], X_embedded[(100 + len(anomaly)):,1], label='tomato(normal)')
         pyplot.legend()
         pyplot.savefig(self._results_dir + '/t_sne_results.pdf')
+
+    def plot_anomalies(self, normal, anomalies):
+        regular_scores = np.zeros(normal.shape[0])
+        ano_scores = np.zeros(anomalies.shape[0])
+        progress_bar = Progbar(target=(regular_scores.shape[0] + ano_scores.shape[0]))
+
+        # Eval the regual data
+        progress = 0
+        for i, img in enumerate(normal):
+            score = self.eval_anomaly(img)
+            regular_scores[i] = score
+            progress_bar.update(progress, values=[('e', score)])
+            progress = progress + 1
+
+        # Eval the anomaly data
+        for i, img in enumerate(anomalies):
+            score = self.eval_anomaly(img)
+            ano_scores[i] = score
+            progress_bar.update(progress, values=[('e', score)])
+            progress = progress + 1
+        
+        print('')
+        print('Healthy mean:', np.mean(regular_scores))
+        print('Healty std:', np.std(regular_scores))
+        print('Anomalies mean:', np.mean(ano_scores))
+        print('Anomalies std:', np.std(ano_scores))
+
+        reg_mean = np.ones(len(regular_scores)) * np.mean(regular_scores)
+        ano_mean = np.ones(len(ano_scores)) * np.mean(ano_scores)
+
+        regular_plot = np.sort(regular_scores)
+        ano_plot = np.sort(ano_scores)
+
+        x = np.arange(len(regular_plot))
+        y1 = ano_plot
+        y2 = regular_plot
+        mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange', 'tab:brown', 'tab:grey', 'tab:pink', 'tab:olive'] 
+
+        # Draw Plot 
+        fig, ax = pyplot.subplots(1, 1, figsize=(8,4), dpi= 80)
+        ax.fill_between(x, y1=y1, y2=0, label='Anomalies', alpha=0.5, color=mycolors[0], linewidth=2)
+        ax.fill_between(x, y1=y2, y2=0, label='Healthy samples', alpha=0.5, color=mycolors[1], linewidth=2)
+
+        # Decorations
+        ax.legend(loc='best', fontsize=12)
+        ax.set(xlim=[0, 479])
+
+        # Draw Tick lines  
+        for y in np.arange(2.5, 30.0, 2.5):    
+            pyplot.hlines(y, xmin=0, xmax=len(x), colors='black', alpha=0.3, linestyles="--", lw=0.5)
+
+        # Lighten borders
+        pyplot.gca().spines["top"].set_alpha(0)
+        pyplot.gca().spines["bottom"].set_alpha(.3)
+        pyplot.gca().spines["right"].set_alpha(0)
+        pyplot.gca().spines["left"].set_alpha(.3)
+
+        pyplot.plot(reg_mean, color=mycolors[1])
+        pyplot.plot(ano_mean, color=mycolors[0])
+        pyplot.ylabel("Reconstruction score")
+        pyplot.xlabel("Samples")
+
+        pyplot.savefig(self._results_dir + '/reconstruction_scores.pdf')
 
 #----------------------------------------------------------------------------
