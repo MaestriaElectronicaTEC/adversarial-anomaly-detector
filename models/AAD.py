@@ -316,7 +316,7 @@ class AAD(AbstractModel):
 
         # Decorations
         ax.legend(loc='best', fontsize=12)
-        ax.set(xlim=[0, 479])
+        ax.set(xlim=[0, len(normal)])
 
         # Draw Tick lines  
         for y in np.arange(2.5, 30.0, 2.5):    
