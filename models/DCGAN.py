@@ -38,7 +38,7 @@ from matplotlib import pyplot
 import sys
 sys.path.append('../utils')
 
-from utils.PreProcessing import load_real_samples
+from utils.PreProcessing import load_real_samples, generate_samples
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -126,15 +126,7 @@ class DCGAN(AbstractModel):
 
     # select real samples
     def generate_real_samples(self, n_samples):
-        # get batch
-        X, _ = self._dataset.next()
-        # choose random instances
-        ix = randint(0, X.shape[0], n_samples)
-        # select images
-        X = X[ix]
-        # generate class labels
-        y = ones((n_samples, 1))
-        return X, y
+        return generate_samples(self._dataset, n_samples)
 
 
     # generate points in latent space as input for the generator
@@ -224,15 +216,16 @@ class DCGAN(AbstractModel):
     #----------------------------------------------------------------------------
 
     def __init__(self, latent_dim, results_dir):
+        super().__init__()
         self._latent_dim = latent_dim
         self._generator = self.define_generator()
         self._discriminator = self.define_discriminator()
         self._gan = self.define_gan()
         self._results_dir = results_dir
         self._metrics = None
+        self._dataset = None
         # make folder for results
         makedirs(self._results_dir, exist_ok=True)
-        super().__init__()
 
     def load(self, model_dirs):
         self._generator.load_weights(model_dirs['generator'])

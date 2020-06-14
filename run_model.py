@@ -20,7 +20,7 @@ def generate_samples(generatorDir, discriminatorDir, latentDim, dataDir, results
     gan.preprocessing(dataDir)
     gan.plot()
 
-def evaluate_anomaly(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim, dataDir, resultsDir):
+def plot_anomaly(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim, dataDir, resultsDir):
     modelDir = {
         "generator": generatorDir,
         "discriminator": discriminatorDir
@@ -34,22 +34,7 @@ def evaluate_anomaly(generatorDir, discriminatorDir, anomalyDetectorDir, latentD
     anomaly_detector.preprocessing(dataDir)
     anomaly_detector.plot()
 
-def analyze_anomalies(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim, anomalyTreshold, dataDir, resultsDir):
-    modelDir = {
-        "generator": generatorDir,
-        "discriminator": discriminatorDir
-    }
-
-    gan  = DCGAN(latentDim, resultsDir)
-    gan.load(modelDir)
-
-    anomaly_detector = AAD(gan.get_generator(), gan.get_discriminator(), resultsDir, latentDim)
-    anomaly_detector.load(anomalyDetectorDir)
-
-    normal, anomaly = anomaly_detector.analize_anomalies(load_test_data(dataDir), anomalyTreshold)
-    anomaly_detector.t_sne_analisys(normal, anomaly)
-
-def plot_anomalies(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim, normlaDataDir, anomalyDataDir, resultsDir):
+def evaluate_anomaly_detector(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim, anomalyTreshold, normlaDataDir, anomalyDataDir, resultsDir):
     modelDir = {
         "generator": generatorDir,
         "discriminator": discriminatorDir
@@ -64,7 +49,7 @@ def plot_anomalies(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim
     normal = load_test_data(normlaDataDir)
     anomaly = load_test_data(anomalyDataDir)
 
-    anomaly_detector.plot_anomalies(normal, anomaly)
+    anomaly_detector.evaluate_model(normal, anomaly, anomalyTreshold)
 
 #----------------------------------------------------------------------------
 
@@ -89,7 +74,7 @@ def cmdline(argv):
     p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
     p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
 
-    p = add_command(    'evaluate_anomaly',     'Remove anomalies from some input image.')
+    p = add_command(    'plot_anomaly',         'Remove anomalies from some input image.')
 
     p.add_argument(     '--generatorDir',       help='Path of the GAN\'s generator weights', default='')
     p.add_argument(     '--discriminatorDir',   help='Path of the GAN\'s discriminator weights', default='')
@@ -98,22 +83,13 @@ def cmdline(argv):
     p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
     p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
 
-    p = add_command(    'analyze_anomalies',    'Analysis of anomalies from a dataset.')
+    p = add_command(    'evaluate_anomaly_detector', 'Plot anomalies from a dataset.')
 
     p.add_argument(     '--generatorDir',       help='Path of the GAN\'s generator weights', default='')
     p.add_argument(     '--discriminatorDir',   help='Path of the GAN\'s discriminator weights', default='')
     p.add_argument(     '--anomalyDetectorDir', help='Path of the AnomalyDetector weights', default='')
     p.add_argument(     '--latentDim',          help='Latent dimension of the GAN', type=int, default=100)
     p.add_argument(     '--anomalyTreshold',    help='Anomaly scroe treshold', type=int, default=2000)
-    p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
-    p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
-
-    p = add_command(    'plot_anomalies',       'Plot anomalies from a dataset.')
-
-    p.add_argument(     '--generatorDir',       help='Path of the GAN\'s generator weights', default='')
-    p.add_argument(     '--discriminatorDir',   help='Path of the GAN\'s discriminator weights', default='')
-    p.add_argument(     '--anomalyDetectorDir', help='Path of the AnomalyDetector weights', default='')
-    p.add_argument(     '--latentDim',          help='Latent dimension of the GAN', type=int, default=100)
     p.add_argument(     '--normlaDataDir',      help='Path of the dataset', default='')
     p.add_argument(     '--anomalyDataDir',     help='Path of the dataset', default='')
     p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')

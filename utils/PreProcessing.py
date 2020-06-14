@@ -1,6 +1,10 @@
 import cv2
 import glob
+
 import numpy as np
+from numpy import ones
+from numpy.random import randn
+from numpy.random import randint
 
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
@@ -31,6 +35,17 @@ def load_real_samples(datadir, data_batch_size=64):
             batch_size=data_batch_size)
 
     return trainGen
+
+def generate_samples(dataset, n_samples):
+    # get batch
+    X, _ = dataset.next()
+    # choose random instances
+    ix = randint(0, X.shape[0], n_samples)
+    # select images
+    X = X[ix]
+    # generate class labels
+    y = ones((n_samples, 1))
+    return X, y
 
 def load_test_data(data_dir):
     img_list = glob.glob(data_dir + '*.png')

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class AbstractModel:
+class AbstractModel(ABC):
 
     @abstractmethod
     def load(self, model_dirs):
