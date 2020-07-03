@@ -6,6 +6,10 @@ from numpy import ones
 from numpy.random import randn
 from numpy.random import randint
 
+from joblib import dump, load
+
+from sklearn.preprocessing import StandardScaler
+
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 #----------------------------------------------------------------------------
@@ -35,6 +39,17 @@ def load_real_samples(datadir, data_batch_size=64):
             batch_size=data_batch_size)
 
     return trainGen
+
+def standard_normalization(data, result_dir, scaler_dir=''):
+    scaler = None
+    if scaler_dir == '':
+        scaler = StandardScaler()
+        scaler.fit(data)
+        dump(scaler, result_dir + "/scaler.joblib") 
+    else:
+        scaler = load(scaler_dir)
+
+    return scaler.transform(data)
 
 def generate_samples(dataset, n_samples):
     # get batch

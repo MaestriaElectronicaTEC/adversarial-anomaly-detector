@@ -16,17 +16,21 @@ from numpy.random import randint
 from tensorflow.keras.utils import Progbar
 from matplotlib import pyplot
 
+from sklearn import svm
 from sklearn.manifold import TSNE
-from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import precision_recall_curve, plot_precision_recall_curve, average_precision_score, roc_curve
+from sklearn.model_selection import GridSearchCV, train_test_split
 
 import sys
 sys.path.append('../utils')
 
 from models.BaseModel import AbstractModel
-from utils.PreProcessing import load_real_samples, generate_samples
+from utils.PreProcessing import load_real_samples, generate_samples, standard_normalization
 
 import warnings
 warnings.filterwarnings("ignore")
+
+from joblib import dump, load
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -40,16 +44,22 @@ class AbstractADDModel(AbstractModel):
         self._discriminator = None
         self._feature_extractor = None
         self._anomaly_detector = None
+        self._svm = None
         self._results_dir = None
         self._metrics = None
+        self._scaler_dir = ''
 
     def load(self, model_dirs):
         if (self._anomaly_detector is not None):
-            self._anomaly_detector.load_weights(model_dirs)
+            self._anomaly_detector.load_weights(model_dirs['aad'])
+            self._scaler_dir = model_dirs['scaler']
+
+            if (model_dirs['svc'] != ''):
+                self._svm = load(model_dirs['svc'])
         else:
             raise RuntimeError("Error: The anomaly detector model is None")
 
-    def preprocessing(self, datadir, data_batch_size):
+    def preprocessing(self, datadir, data_batch_size=64):
         self._dataset = load_real_samples(datadir, data_batch_size)
 
     def generate_real_samples(self, n_batch):
@@ -106,23 +116,135 @@ class AbstractADDModel(AbstractModel):
         pyplot.savefig(self._results_dir + '/plot_line_aad_loss.pdf')
         pyplot.close()
 
+    def train_svm_with_grid_search(self, normal, anomaly):
+        # estimate normal and anomalies data
+        _, _, np_testy, np_scores = self.estimate_labeled_data(normal, anomaly)
+
+        # hyperparameters
+        param_grid = [
+            {'C': [1, 100, 1000, 10000], 'kernel': ['linear']},
+            {'C': [1, 100, 1000, 10000], 'gamma': [0.01, 0.001, 0.0001], 'degree': [2, 3], 'kernel': ['poly','rbf','sigmoid']},
+        ]
+
+        # support vector machine
+        self._svm = svm.SVC(verbose=False)
+        clf = GridSearchCV(self._svm, param_grid, verbose=True, cv=10)
+
+        # data preprocessing
+        #data = np_scores.reshape(-1, 1)
+        data = standard_normalization(np_scores, self._results_dir)
+        #X_train, _, y_train, _ = train_test_split(data, np_testy, test_size=0, random_state=42)
+        X_train = data
+        y_train = np_testy
+
+        print("")
+        print("X_train:", len(X_train))
+        print("Y_train:", len(y_train))
+        print("")
+        print("Training...")
+
+        # train the model
+        clf.fit(X_train, y_train)
+
+        print("")
+        print("Results:")
+
+        print("")
+        print("Best estimator")
+        print(clf.best_estimator_)
+
+        print("")
+        print("Best score:", clf.best_score_)
+
+    def train_svm(self, C, gamma, degree, kernel, normal, anomaly):
+        # estimate normal and anomalies data
+        _, _, np_testy, np_scores = self.estimate_labeled_data(normal, anomaly)
+
+        # support vector machine
+        self._svm = svm.SVC(C=C, gamma=gamma, degree=degree, kernel=kernel, probability=True, verbose=True)
+
+        # data preprocessing
+        data = standard_normalization(np_scores, self._results_dir)
+        X_train, X_test, y_train, y_test = train_test_split(data, np_testy, test_size=0.3, random_state=20)
+
+        print("")
+        print("X_train:", len(X_train))
+        print(X_train)
+        print("Y_train:", len(y_train))
+        print("")
+        print("Training...")
+
+        # train the model
+        self._svm.fit(X_train, y_train)
+
+        # save the SVC model
+        dump(self._svm, self._results_dir + "/svc.joblib") 
+
+        # plot resutls
+
+        # Precision and recall
+        y_score = self._svm.decision_function(X_test)
+        average_precision = average_precision_score(y_test, y_score)
+        disp = plot_precision_recall_curve(self._svm, X_test, y_test)
+        disp.ax_.set_title('2-class Precision-Recall curve: '
+                           'AP={0:0.2f}'.format(average_precision))
+        pyplot.savefig(self._results_dir + '/precision_and_recall.pdf')
+        pyplot.show()
+
+        # ROC
+        # predict probabilities
+        yhat = self._svm.predict_proba(X_test)
+        # retrieve just the probabilities for the positive class
+        pos_probs = yhat[:, 1]
+        # plot no skill roc curve
+        pyplot.plot([0, 1], [0, 1], linestyle='--', label='No Skill')
+        # calculate roc curve for model
+        fpr, tpr, _ = roc_curve(y_test, pos_probs)
+        # plot model roc curve
+        pyplot.plot(fpr, tpr, marker='.', label='SVC')
+        # axis labels
+        pyplot.xlabel('False Positive Rate')
+        pyplot.ylabel('True Positive Rate')
+        # show the legend
+        pyplot.legend()
+        # save figure
+        pyplot.savefig(self._results_dir + '/roc.pdf')
+        # show the plot
+        pyplot.show()
+
     def get_metrics(self):
         return self._metrics
 
     def predict(self, img):
         assert self._feature_extractor
         assert self._anomaly_detector
+        assert self._svm
 
+        # prepare input data
         test_img = None
         if img.ndim < 4:
             test_img = np.asarray([img])
         else:
             test_img = img
 
+        # get loss values
         d_x = self._feature_extractor.predict(test_img)
         scores = self._anomaly_detector.evaluate(test_img, [test_img, d_x], verbose=0, steps=1)
-        score = scores[-1]
-        return score
+        np_scores = np.zeros([1, 1])
+        np_scores[0, 0] = scores[-1]
+        data = standard_normalization(np_scores, self._results_dir, self._scaler_dir)
+        
+        # get reconstrcuted 
+        res = self._anomaly_detector.predict(test_img)
+
+        # classify
+        class_predicted = self._svm.predict(data)
+
+        # data pos-processing
+        res2 = (res[0]*127.5)+127.5
+        res2 = res2.astype(np.uint8)
+
+        return scores[-1], class_predicted[0], res2
 
     def plot(self):
         # asserts
@@ -132,21 +254,25 @@ class AbstractADDModel(AbstractModel):
         # get a testing image from the dataset
         test_img = self.generate_real_samples(1)[0]
         start = cv2.getTickCount()
-        res = self._anomaly_detector.predict(test_img)
+
+        score, class_predicted, res = self.predict(test_img)
 
         # compute the image reconstrcution score
-        score = self.predict(test_img)
         time = (cv2.getTickCount() - start) / cv2.getTickFrequency() * 1000
 
+        # classify image
+        if (class_predicted == 0):
+            print("Image is a healthy sample")
+        else:
+            print("Image has anomalies!")
+
         # print results
-        print("Anomaly score : ", score[1])
+        print("Anomaly score : ", score)
         print("Processing time: " + str(time))
 
         # data pos-processing
         test_img2 = (test_img*127.5)+127.5
         test_img2 = test_img2.astype(np.uint8)
-        res2 = (res[0]*127.5)+127.5
-        res2 = res2.astype(np.uint8)
 
         # save original image
         pyplot.figure(3, figsize=(3, 3))
@@ -154,14 +280,17 @@ class AbstractADDModel(AbstractModel):
         pyplot.imshow(cv2.cvtColor(test_img2[0],cv2.COLOR_BGR2RGB))
         pyplot.savefig(self._results_dir + '/original_sample.pdf')
 
+        pyplot.show()
+
         # save reconstructed image
         pyplot.figure(3, figsize=(3, 3))
         pyplot.title('Reconstructed')
-        pyplot.imshow(cv2.cvtColor(res2[0],cv2.COLOR_BGR2RGB))
+        pyplot.imshow(cv2.cvtColor(res[0],cv2.COLOR_BGR2RGB))
         pyplot.savefig(self._results_dir + '/reconstructed_sample.pdf')
 
-    def evaluate_subset(self, test_data, anomaly_treshold):
-        # NOTE: this will be the classifier function for the SVC. Rename it to 'classify_subset'
+        pyplot.show()
+
+    def evaluate_subset(self, test_data):
         normal = list()
         anomaly = list()
         progress_bar = Progbar(target=test_data.shape[0])
@@ -170,9 +299,9 @@ class AbstractADDModel(AbstractModel):
         for i, img in enumerate(test_data):
             # get sample image
             test_img = np.asarray([img])
-            score = self.predict(test_img)
+            score, class_predicted, _ = self.predict(test_img)
             # classify according with the treshold
-            if score < anomaly_treshold:
+            if class_predicted == 0:
                 normal.append(img)
             else:
                 anomaly.append(img)
@@ -216,53 +345,44 @@ class AbstractADDModel(AbstractModel):
         pyplot.legend()
         pyplot.savefig(self._results_dir + '/' + output_name + 't_sne_results.pdf')
 
-    def evaluate_model(self, normal, anomalies, anomaly_treshold):
-        # asserts
-        assert self._results_dir != None    
-
+    def estimate_labeled_data(self, normal, anomalies):
         # initaite variables
         regular_scores = np.zeros(normal.shape[0])
         ano_scores = np.zeros(anomalies.shape[0])
-        np_scores = np.zeros(normal.shape[0] + anomalies.shape[0])
+        np_scores = np.zeros([normal.shape[0] + anomalies.shape[0], 1])
         np_testy = np.zeros(normal.shape[0] + anomalies.shape[0])
         progress_bar = Progbar(target=(regular_scores.shape[0] + ano_scores.shape[0]))
 
         # Eval the regual data
         progress = 0
         for i, img in enumerate(normal):
-            score = self.predict(img)
+            score, _, _ = self.predict(img)
             regular_scores[i] = score
             np_testy[progress] = 0
-            np_scores[progress] = score
+            np_scores[progress, 0] = score
             progress_bar.update(progress, values=[('e', score)])
             progress = progress + 1
-        # analyze subset
-        normal_res, anomaly_res = self.evaluate_subset(normal, anomaly_treshold)
-        self.t_sne_analysis(normal_res, anomaly_res) 
-        pyplot.clf()
 
         # Eval the anomaly data
         for i, img in enumerate(anomalies):
-            score = self.predict(img)
+            score, _, _ = self.predict(img)
             ano_scores[i] = score
             np_testy[progress] = 1
-            np_scores[progress] = score
+            np_scores[progress, 0] = score
             progress_bar.update(progress, values=[('e', score)])
             progress = progress + 1
-        # analyze subset
-        normal_res, anomaly_res = self.evaluate_subset(anomalies, anomaly_treshold)
-        self.t_sne_analysis(normal_res, anomaly_res, 'anomaly_')
-        pyplot.clf()
 
-        # compute precision and recall curve
-        precision, recall, _ = precision_recall_curve(np_testy, np_scores)
+        return (regular_scores, ano_scores, np_testy, np_scores)
+    
+    def evaluate_model(self, normal, anomalies):
+        # asserts
+        assert self._results_dir != None
 
-        # plot precision and recall
-        pyplot.plot(recall, precision, marker='.')
-        # axis labels
-        pyplot.xlabel('Recall')
-        pyplot.ylabel('Precision')
-        pyplot.savefig(self._results_dir + '/precision_recall.pdf')
+        # estimate normal and anomalies data
+        regular_scores, ano_scores, _, _ = self.estimate_labeled_data(normal, anomalies) 
+
+        # t-SNE analysis
+        #self.t_sne_analysis()
         
         print('')
         print('Healthy mean:', np.mean(regular_scores))
