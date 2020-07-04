@@ -67,7 +67,7 @@ class AbstractADDModel(AbstractModel):
 
         return generate_samples(self._dataset, n_batch)
 
-    def train(self, n_epochs, n_batch):
+    def train(self, n_epochs=10, n_batch=128):
         #asserts
         assert self._feature_extractor != None
         assert self._anomaly_detector != None
