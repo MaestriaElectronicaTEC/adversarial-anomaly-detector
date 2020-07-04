@@ -125,7 +125,7 @@ def cmdline(argv):
     p.add_argument(     '--discriminatorDir',   help='Path of the GAN\'s discriminator weights', default='')
     p.add_argument(     '--anomalyDetectorDir', help='Path of the AnomalyDetector weights', default='')
     p.add_argument(     '--latentDim',          help='Latent dimension of the GAN', type=int, default=100)
-    p.add_argument(     '--C',                  help='SVM C parameter', type=float, default=1)
+    p.add_argument(     '--C',                  help='SVM C parameter', type=float, default=-1)
     p.add_argument(     '--gamma',              help='SVM gamma parameter', type=float, default=0.001)
     p.add_argument(     '--kernel',             help='SVM kernel parameter', default='rbf')
     p.add_argument(     '--degree',             help='SVM degree parameter', type=int, default=3)

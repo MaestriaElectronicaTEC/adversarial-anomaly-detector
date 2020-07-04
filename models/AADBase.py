@@ -18,7 +18,7 @@ from matplotlib import pyplot
 
 from sklearn import svm
 from sklearn.manifold import TSNE
-from sklearn.metrics import precision_recall_curve, plot_precision_recall_curve, average_precision_score, roc_curve
+from sklearn.metrics import precision_recall_curve, plot_precision_recall_curve, average_precision_score, roc_curve, recall_score, precision_score, confusion_matrix
 from sklearn.model_selection import GridSearchCV, train_test_split
 
 import sys
@@ -161,7 +161,11 @@ class AbstractADDModel(AbstractModel):
         _, _, np_testy, np_scores = self.estimate_labeled_data(normal, anomaly)
 
         # support vector machine
+        if (gamma is -1):
+            gamma = 'scale'
         self._svm = svm.SVC(C=C, gamma=gamma, degree=degree, kernel=kernel, probability=True, verbose=True)
+        print("")
+        print(self._svm)
 
         # data preprocessing
         data = standard_normalization(np_scores, self._results_dir)
@@ -212,13 +216,24 @@ class AbstractADDModel(AbstractModel):
         # show the plot
         pyplot.show()
 
+        # get confusion matrix
+        y_pred = self._svm.predict(X_test)
+        tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+        presicion  = precision_score(y_test, y_pred, average='macro')
+        recall = recall_score(y_test, y_pred, average='macro')
+        sensitivity = tp / (tp + fn)
+        specificity = tn / (tn + fp)
+        print("presicion: " + str(presicion))
+        print("recall: " + str(recall))
+        print("sensitivity: " + str(sensitivity))
+        print("specificity: " + str(specificity))
+
     def get_metrics(self):
         return self._metrics
 
     def predict(self, img):
         assert self._feature_extractor
         assert self._anomaly_detector
-        assert self._svm
 
         # prepare input data
         test_img = None
@@ -237,14 +252,17 @@ class AbstractADDModel(AbstractModel):
         # get reconstrcuted 
         res = self._anomaly_detector.predict(test_img)
 
-        # classify
-        class_predicted = self._svm.predict(data)
-
         # data pos-processing
         res2 = (res[0]*127.5)+127.5
         res2 = res2.astype(np.uint8)
 
-        return scores[-1], class_predicted[0], res2
+        if (self._svm is not None):
+            # classify
+            class_predicted = self._svm.predict(data)
+
+            return scores[-1], class_predicted[0], res2
+        else:
+            return scores[-1], -1, res2
 
     def plot(self):
         # asserts
