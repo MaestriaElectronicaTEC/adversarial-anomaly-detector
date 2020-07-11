@@ -18,7 +18,7 @@ from matplotlib import pyplot
 
 from sklearn import svm
 from sklearn.manifold import TSNE
-from sklearn.metrics import precision_recall_curve, plot_precision_recall_curve, average_precision_score, roc_curve, recall_score, precision_score, confusion_matrix
+from sklearn.metrics import auc, precision_recall_curve, plot_precision_recall_curve, average_precision_score, roc_curve, recall_score, precision_score, confusion_matrix
 from sklearn.model_selection import GridSearchCV, train_test_split
 
 import sys
@@ -128,7 +128,7 @@ class AbstractADDModel(AbstractModel):
 
         # support vector machine
         self._svm = svm.SVC(verbose=False)
-        clf = GridSearchCV(self._svm, param_grid, verbose=True, cv=10)
+        clf = GridSearchCV(self._svm, param_grid, verbose=True, cv=10, n_jobs=4)
 
         # data preprocessing
         #data = np_scores.reshape(-1, 1)
@@ -154,6 +154,10 @@ class AbstractADDModel(AbstractModel):
         print(clf.best_estimator_)
 
         print("")
+        print("Best parameters")
+        print(clf.best_params_)
+
+        print("")
         print("Best score:", clf.best_score_)
 
     def train_svm(self, C, gamma, degree, kernel, normal, anomaly):
@@ -173,7 +177,6 @@ class AbstractADDModel(AbstractModel):
 
         print("")
         print("X_train:", len(X_train))
-        print(X_train)
         print("Y_train:", len(y_train))
         print("")
         print("Training...")
@@ -204,8 +207,9 @@ class AbstractADDModel(AbstractModel):
         pyplot.plot([0, 1], [0, 1], linestyle='--', label='No Skill')
         # calculate roc curve for model
         fpr, tpr, _ = roc_curve(y_test, pos_probs)
+        AUC = auc(fpr, tpr)
         # plot model roc curve
-        pyplot.plot(fpr, tpr, marker='.', label='SVC')
+        pyplot.plot(fpr, tpr, label='SVC')
         # axis labels
         pyplot.xlabel('False Positive Rate')
         pyplot.ylabel('True Positive Rate')
@@ -227,6 +231,7 @@ class AbstractADDModel(AbstractModel):
         print("recall: " + str(recall))
         print("sensitivity: " + str(sensitivity))
         print("specificity: " + str(specificity))
+        print("AUC: " + str(AUC))
 
     def get_metrics(self):
         return self._metrics

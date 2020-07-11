@@ -30,7 +30,7 @@ def train_anomaly_detector(generatorDir, discriminatorDir, latentDim, reconstruc
     anomaly_detector.preprocessing(dataDir)
     anomaly_detector.train(n_epochs=epochs)
     # save the object state
-    pickle.dump( anomaly_detector, open( resultsDir + "/add.pkl", "wb" ) )
+    #pickle.dump( anomaly_detector, open( resultsDir + "/add.pkl", "wb" ) )
 
 def train_anomaly_grid_search(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim, normlaDataDir, anomalyDataDir, resultsDir):
     modelDir = {

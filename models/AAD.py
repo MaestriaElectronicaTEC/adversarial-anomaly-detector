@@ -22,6 +22,11 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.utils import Progbar
 from tensorflow.keras.callbacks import EarlyStopping
+import tensorflow as tf
+
+physical_devices = tf.config.list_physical_devices('GPU')
+if (len(physical_devices) > 0):
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 #----------------------------------------------------------------------------
 
@@ -34,25 +39,12 @@ class AAD(AbstractADDModel):
         return K.sum(K.abs(y_true - y_pred))
 
     # discriminator intermediate layer feautre extraction
-    def define_feature_extractor(self, in_shape=(48,48,3)): #TODO: Remove hardcoded dimensions
+    def define_feature_extractor(self):
         # define model
-        intermidiate_model = Sequential()
-        # downsample to 24x24
-        intermidiate_model.add(Conv2D(64, (4,4), strides=(2,2), padding='same', input_shape=in_shape, weights=self._discriminator.layers[0].get_weights()))
-        intermidiate_model.add(BatchNormalization())
-        intermidiate_model.add(LeakyReLU(alpha=0.2))
-        intermidiate_model.add(Dropout(0.25))
-        # downsample to 12x12
-        intermidiate_model.add(Conv2D(64, (4,4), strides=(2,2), padding='same', weights=self._discriminator.layers[4].get_weights()))
-        intermidiate_model.add(BatchNormalization())
-        intermidiate_model.add(LeakyReLU(alpha=0.2))
-        intermidiate_model.add(Dropout(0.25))
-        # downsample to 6x6
-        intermidiate_model.add(Conv2D(64, (4,4), strides=(2,2), padding='same', weights=self._discriminator.layers[8].get_weights()))
-        intermidiate_model.add(BatchNormalization())
-        intermidiate_model.add(LeakyReLU(alpha=0.2))
-        intermidiate_model.add(Dropout(0.25))
-        intermidiate_model.compile(loss='binary_crossentropy', optimizer='adam')
+        intermidiate_model = Model(inputs=self._discriminator.layers[0].input, outputs=self._discriminator.layers[8].output)
+        intermidiate_model.compile(loss='binary_crossentropy', optimizer='rmsprop')
+        #intermidiate_model.summary()
+
         return intermidiate_model
 
     # anomaly detection model define
@@ -83,6 +75,7 @@ class AAD(AbstractADDModel):
         D_out= self._feature_extractor(G_out)
         model = Model(inputs=aInput, outputs=[G_out, D_out])
         model.compile(loss=self.sum_of_residual, loss_weights= [self._reconstruction_error_factor, self._discrimnator_feature_error_factor], optimizer='adam')
+        #model.compile(loss=tf.keras.losses.MeanAbsoluteError(), loss_weights= [self._reconstruction_error_factor, self._discrimnator_feature_error_factor], optimizer='adam')
         # batchnorm learning phase fixed (test) : make non trainable
         K.set_learning_phase(0)
         return model
