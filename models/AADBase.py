@@ -193,8 +193,8 @@ class AbstractADDModel(AbstractModel):
         y_score = self._svm.decision_function(X_test)
         average_precision = average_precision_score(y_test, y_score)
         disp = plot_precision_recall_curve(self._svm, X_test, y_test)
-        disp.ax_.set_title('2-class Precision-Recall curve: '
-                           'AP={0:0.2f}'.format(average_precision))
+        #disp.ax_.set_title('2-class Precision-Recall curve: '
+        #                   'AP={0:0.2f}'.format(average_precision))
         pyplot.savefig(self._results_dir + '/precision_and_recall.pdf')
         pyplot.show()
 
@@ -227,6 +227,7 @@ class AbstractADDModel(AbstractModel):
         recall = recall_score(y_test, y_pred, average='macro')
         sensitivity = tp / (tp + fn)
         specificity = tn / (tn + fp)
+        print("average presicion: " + str(average_precision))
         print("presicion: " + str(presicion))
         print("recall: " + str(recall))
         print("sensitivity: " + str(sensitivity))
@@ -250,8 +251,10 @@ class AbstractADDModel(AbstractModel):
         # get loss values
         d_x = self._feature_extractor.predict(test_img)
         scores = self._anomaly_detector.evaluate(test_img, [test_img, d_x], verbose=0, steps=1)
-        np_scores = np.zeros([1, 1])
+        np_scores = np.zeros([1, 3])
         np_scores[0, 0] = scores[-1]
+        np_scores[0, 1] = scores[0]
+        np_scores[0, 2] = scores[1]
         data = standard_normalization(np_scores, self._results_dir, self._scaler_dir)
         
         # get reconstrcuted 
@@ -265,9 +268,9 @@ class AbstractADDModel(AbstractModel):
             # classify
             class_predicted = self._svm.predict(data)
 
-            return scores[-1], class_predicted[0], res2
+            return np_scores, class_predicted[0], res2
         else:
-            return scores[-1], -1, res2
+            return np_scores, -1, res2
 
     def plot(self):
         # asserts
@@ -290,7 +293,7 @@ class AbstractADDModel(AbstractModel):
             print("Image has anomalies!")
 
         # print results
-        print("Anomaly score : ", score)
+        print("Anomaly score : ", score[0, 0])
         print("Processing time: " + str(time))
 
         # data pos-processing
@@ -300,7 +303,7 @@ class AbstractADDModel(AbstractModel):
         # save original image
         pyplot.figure(3, figsize=(3, 3))
         pyplot.title('Original')
-        pyplot.imshow(cv2.cvtColor(test_img2[0],cv2.COLOR_BGR2RGB))
+        pyplot.imshow(test_img2[0])
         pyplot.savefig(self._results_dir + '/original_sample.pdf')
 
         pyplot.show()
@@ -308,7 +311,7 @@ class AbstractADDModel(AbstractModel):
         # save reconstructed image
         pyplot.figure(3, figsize=(3, 3))
         pyplot.title('Reconstructed')
-        pyplot.imshow(cv2.cvtColor(res[0],cv2.COLOR_BGR2RGB))
+        pyplot.imshow(res[0])
         pyplot.savefig(self._results_dir + '/reconstructed_sample.pdf')
 
         pyplot.show()
@@ -372,7 +375,7 @@ class AbstractADDModel(AbstractModel):
         # initaite variables
         regular_scores = np.zeros(normal.shape[0])
         ano_scores = np.zeros(anomalies.shape[0])
-        np_scores = np.zeros([normal.shape[0] + anomalies.shape[0], 1])
+        np_scores = np.zeros([normal.shape[0] + anomalies.shape[0], 3])
         np_testy = np.zeros(normal.shape[0] + anomalies.shape[0])
         progress_bar = Progbar(target=(regular_scores.shape[0] + ano_scores.shape[0]))
 
@@ -380,19 +383,19 @@ class AbstractADDModel(AbstractModel):
         progress = 0
         for i, img in enumerate(normal):
             score, _, _ = self.predict(img)
-            regular_scores[i] = score
+            regular_scores[i] = score[0, 0]
             np_testy[progress] = 0
-            np_scores[progress, 0] = score
-            progress_bar.update(progress, values=[('e', score)])
+            np_scores[progress] = score[0]
+            progress_bar.update(progress, values=[('e', score[0, 0])])
             progress = progress + 1
 
         # Eval the anomaly data
         for i, img in enumerate(anomalies):
             score, _, _ = self.predict(img)
-            ano_scores[i] = score
+            ano_scores[i] = score[0, 0]
             np_testy[progress] = 1
-            np_scores[progress, 0] = score
-            progress_bar.update(progress, values=[('e', score)])
+            np_scores[progress] = score[0]
+            progress_bar.update(progress, values=[('e', score[0, 0])])
             progress = progress + 1
 
         return (regular_scores, ano_scores, np_testy, np_scores)

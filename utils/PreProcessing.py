@@ -68,6 +68,7 @@ def load_test_data(data_dir):
     
     for img_path in img_list:
         img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img, (48, 48), interpolation = cv2.INTER_NEAREST)
         img = (img.astype(np.float32) - 127.5) / 127.5
         images.append(img)
