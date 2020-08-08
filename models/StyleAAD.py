@@ -51,6 +51,8 @@ class StyleAAD(AbstractADDModel):
     def define_anomaly_detector(self):
         self._feature_extractor.trainable = False
         self._generator.trainable = False
+        self._generator.model_mapping.trainable = False
+        self._generator.model_synthesis.trainable = False
         # Encoder
         aInput = Input(shape=(3,64,64)) #TODO: Remove hardcoded dimensions
         x = Conv2D(64, (4,4), strides=(2,2), padding='same', trainable=True)(aInput)

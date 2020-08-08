@@ -1,3 +1,5 @@
+# CODE TAKEN FROM: https://github.com/ialhashim/StyleGAN-Tensorflow2
+
 import math
 import numpy as np
 import tensorflow as tf
@@ -65,6 +67,7 @@ def Broadcast(name, dlatent_broadcast=10):
 class Truncation(Layer):
     def __init__(self, name, num_layers=10, truncation_psi=0.7, truncation_cutoff=8):
         super(Truncation, self).__init__(name=name)
+        self._name = name
         self.num_layers = num_layers
         self.truncation_psi = truncation_psi
         self.truncation_cutoff = truncation_cutoff
@@ -80,6 +83,16 @@ class Truncation(Layer):
         def lerp(a,b,t): return a + (b - a) * t
         
         return lerp(self.dlatent_avg, inputs, coefs)
+    
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'name': self._name,
+            'num_layers': self.num_layers,
+            'truncation_psi': self.truncation_psi,
+            'truncation_cutoff': self.truncation_cutoff,
+        })
+        return config
 
 class DenseLayer(Dense):
     def __init__(self, units, name, kernel_initializer=GetWeights(), gain=math.sqrt(2), lrmul=1.0):
@@ -140,7 +153,8 @@ class RandomNoise(Layer):
     def __init__(self, name, layer_idx):
         super(RandomNoise, self).__init__(name=name)
         
-        res = layer_idx // 2 + 2        
+        res = layer_idx // 2 + 2 
+        self._name = name      
         self.layer_idx = layer_idx
         self.noise_shape = [1, 1, 2**res, 2**res]
     
@@ -149,6 +163,14 @@ class RandomNoise(Layer):
         
     def call(self, inputs):
         return self.noise
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'name': self._name,
+            'layer_idx': self.layer_idx,
+        })
+        return config
     
 class ApplyNoise(Layer):
     def __init__(self, name):
@@ -167,6 +189,7 @@ class ApplyNoise(Layer):
 class ApplyBias(Layer):
     def __init__(self, name, lrmul=1.0):
         super(ApplyBias, self).__init__(name=name)
+        self._name = name
         self.lrmul = lrmul
         
     def build(self, input_shape):
@@ -177,13 +200,30 @@ class ApplyBias(Layer):
         if len(x.shape) == 2: return x + b
         return x + tf.reshape(b, [1, -1, 1, 1])
 
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'name': self._name,
+            'lrmul': self.lrmul,
+        })
+        return config
+
 class StridedSlice(Layer):
     def __init__(self, layer_idx, name):
         super(StridedSlice, self).__init__(name=name)
+        self._name = name
         self.layer_idx = layer_idx
     
     def call(self, inputs):
         return inputs[:, self.layer_idx]
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'name': self._name,
+            'layer_idx': self.layer_idx,
+        })
+        return config
     
 class StyleModApply(Layer):
     def __init__(self, name):
