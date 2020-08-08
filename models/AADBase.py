@@ -15,6 +15,7 @@ from numpy.random import randint
 
 from tensorflow.keras.utils import Progbar
 from matplotlib import pyplot
+from mpl_toolkits.mplot3d import Axes3D
 
 from sklearn import svm
 from sklearn.manifold import TSNE
@@ -36,7 +37,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 class AbstractADDModel(AbstractModel):
 
-    def __init__(self):
+    def __init__(self, format='channels_last', input_shape=48):
         self._reconstruction_error_factor = 0.9
         self._discrimnator_feature_error_factor = 0.1
         self._latent_dimension = 200
@@ -48,6 +49,8 @@ class AbstractADDModel(AbstractModel):
         self._results_dir = None
         self._metrics = None
         self._scaler_dir = ''
+        self._format = format
+        self._input_shape = input_shape
 
     def load(self, model_dirs):
         if (self._anomaly_detector is not None):
@@ -60,7 +63,7 @@ class AbstractADDModel(AbstractModel):
             raise RuntimeError("Error: The anomaly detector model is None")
 
     def preprocessing(self, datadir, data_batch_size=64):
-        self._dataset = load_real_samples(datadir, data_batch_size)
+        self._dataset = load_real_samples(datadir, data_batch_size, self._format, self._input_shape)
 
     def generate_real_samples(self, n_batch):
         assert self._dataset != None
@@ -220,6 +223,12 @@ class AbstractADDModel(AbstractModel):
         # show the plot
         pyplot.show()
 
+        # show SVC scattered graph
+        fig = pyplot.figure()
+        ax = Axes3D(fig)
+        ax.scatter(X_test[:, 0], X_test[:, 1], X_test[:, 2], c=y_test, s=50, cmap='Paired')
+        pyplot.show()
+
         # get confusion matrix
         y_pred = self._svm.predict(X_test)
         tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
@@ -302,7 +311,8 @@ class AbstractADDModel(AbstractModel):
 
         # save original image
         pyplot.figure(3, figsize=(3, 3))
-        pyplot.title('Original')
+        #pyplot.title('Original')
+        pyplot.axis('off')
         pyplot.imshow(test_img2[0])
         pyplot.savefig(self._results_dir + '/original_sample.pdf')
 
@@ -310,7 +320,8 @@ class AbstractADDModel(AbstractModel):
 
         # save reconstructed image
         pyplot.figure(3, figsize=(3, 3))
-        pyplot.title('Reconstructed')
+        #pyplot.title('Reconstructed')
+        pyplot.axis('off')
         pyplot.imshow(res[0])
         pyplot.savefig(self._results_dir + '/reconstructed_sample.pdf')
 
@@ -363,9 +374,9 @@ class AbstractADDModel(AbstractModel):
 
         # plot t-SNE
         X_embedded = TSNE(n_components=2).fit_transform(output)
-        pyplot.figure(5, figsize=(15, 15))
-        pyplot.title("t-SNE embedding on the feature representation")
-        pyplot.scatter(X_embedded[:100,0], X_embedded[:100,1], label='random noise(anomaly)')
+        #pyplot.figure(5, figsize=(15, 15))
+        #pyplot.title("t-SNE embedding on the feature representation")
+        #pyplot.scatter(X_embedded[:100,0], X_embedded[:100,1], label='random noise(anomaly)')
         pyplot.scatter(X_embedded[100:(100 + len(anomaly)),0], X_embedded[100:(100 + len(anomaly)),1], label='tomato(anomaly)')
         pyplot.scatter(X_embedded[(100 + len(anomaly)):,0], X_embedded[(100 + len(anomaly)):,1], label='tomato(normal)')
         pyplot.legend()

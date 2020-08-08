@@ -4,8 +4,11 @@ import sys
 import pickle
 import argparse
 
-from models.DCGAN import DCGAN
 from models.AAD import AAD
+from models.StyleAAD import StyleAAD
+from models.DCGAN import DCGAN
+from models.stylegan import StyleGAN_G
+from models.stylegan import StyleGAN_D
 from utils.PreProcessing import load_test_data
 
 #----------------------------------------------------------------------------
@@ -31,6 +34,18 @@ def train_anomaly_detector(generatorDir, discriminatorDir, latentDim, reconstruc
     anomaly_detector.train(n_epochs=epochs)
     # save the object state
     #pickle.dump( anomaly_detector, open( resultsDir + "/add.pkl", "wb" ) )
+
+def train_style_anomaly_detector(generatorDir, discriminatorDir, latentDim, reconstructionError, dicriminatorError, epochs, dataDir, resultsDir):
+    # load the style gan
+    style_gan_g = StyleGAN_G()
+    style_gan_g.load_weights(generatorDir)
+
+    style_gan_d = StyleGAN_D()
+    style_gan_d.load_weights(discriminatorDir)
+
+    anomaly_detector = StyleAAD(style_gan_g, style_gan_d, resultsDir, latentDim, reconstructionError, dicriminatorError)
+    anomaly_detector.preprocessing(dataDir)
+    anomaly_detector.train(n_epochs=epochs)
 
 def train_anomaly_grid_search(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim, normlaDataDir, anomalyDataDir, resultsDir):
     modelDir = {
@@ -103,6 +118,17 @@ def cmdline(argv):
     p.add_argument(     '--generatorDir',       help='Path of the generator h5 file', default='')
     p.add_argument(     '--discriminatorDir',   help='Path of the discriminator h5 file', default='')
     p.add_argument(     '--latentDim',          help='Latent space dimension of the GAN\'s generator', type=int, default=100)
+    p.add_argument(     '--reconstructionError',help='Reconstruction error weight', type=float, default=0.90)
+    p.add_argument(     '--dicriminatorError',  help='Discriminator error weight', type=float, default=0.10)
+    p.add_argument(     '--epochs',             help='Number of epochs for the training', type=int, default=20)
+    p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
+    p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
+
+    p = add_command(    'train_style_anomaly_detector','Training of the Adversarial Anomaly Detector model with a StyleGAN.')
+
+    p.add_argument(     '--generatorDir',       help='Path of the generator h5 file', default='')
+    p.add_argument(     '--discriminatorDir',   help='Path of the discriminator h5 file', default='')
+    p.add_argument(     '--latentDim',          help='Latent space dimension of the GAN\'s generator', type=int, default=512)
     p.add_argument(     '--reconstructionError',help='Reconstruction error weight', type=float, default=0.90)
     p.add_argument(     '--dicriminatorError',  help='Discriminator error weight', type=float, default=0.10)
     p.add_argument(     '--epochs',             help='Number of epochs for the training', type=int, default=20)
