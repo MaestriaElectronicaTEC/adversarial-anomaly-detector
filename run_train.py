@@ -6,6 +6,7 @@ import argparse
 
 from models.AAD import AAD
 from models.StyleAAD import StyleAAD
+from models.StyleAAD2 import StyleAAD2
 from models.DCGAN import DCGAN
 from models.stylegan import StyleGAN_G
 from models.stylegan import StyleGAN_D
@@ -43,7 +44,7 @@ def train_style_anomaly_detector(generatorDir, discriminatorDir, latentDim, reco
     style_gan_d = StyleGAN_D()
     style_gan_d.load_weights(discriminatorDir)
 
-    anomaly_detector = StyleAAD(style_gan_g, style_gan_d, resultsDir, latentDim, reconstructionError, dicriminatorError)
+    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim, reconstructionError, dicriminatorError)
     anomaly_detector.preprocessing(dataDir)
     anomaly_detector.train(n_epochs=epochs)
 
