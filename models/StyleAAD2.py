@@ -54,14 +54,20 @@ class StyleAAD2(AbstractADDModel):
         self._generator.model_mapping.trainable = False
         self._generator.model_synthesis.trainable = False
 
+        # define custom activation function
+        def custom_tanh(x):
+            return 3*tf.math.tanh(x)
+
         # encoder
-        disc_layers = self._discriminator.model.layers[:-1]
+        enc_layers = self._encoder_base.layers[:-1]
         encoder = Sequential(name='Encoder')
         aInput = Input(shape=(3,64,64)) 
         encoder.add(aInput)
-        for layer in disc_layers:
+        for layer in enc_layers:
+            layer.trainable = True
             encoder.add(layer)
-        encoder.add(Dense(self._latent_dimension, activation='tanh', trainable=True))
+        encoder.add(Dense(self._latent_dimension, trainable=True))
+        encoder.add(tf.keras.layers.Activation(custom_tanh))
 
         # G & D feature
         G_mapping_out = self._generator.model_mapping(encoder.output)
@@ -76,13 +82,14 @@ class StyleAAD2(AbstractADDModel):
 
     #----------------------------------------------------------------------------
 
-    def __init__(self, generator, discriminator, results_dir, latent_dimension=200, r_error=0.90, d_error=0.10):
+    def __init__(self, generator, discriminator, encoder_base, results_dir, latent_dimension=200, r_error=0.90, d_error=0.10):
         super().__init__(format='channels_first', input_shape=64)
         self._reconstruction_error_factor = r_error
         self._discrimnator_feature_error_factor = d_error
         self._latent_dimension = latent_dimension
         self._generator = generator
         self._discriminator = discriminator
+        self._encoder_base = encoder_base
         self._feature_extractor = self.define_feature_extractor()
         self._anomaly_detector = self.define_anomaly_detector()
         self._results_dir = results_dir
