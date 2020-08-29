@@ -90,16 +90,6 @@ class StyleAAD2(AbstractADDModel):
         x = Dropout(0.05)(x)
         return x
 
-    def get_discriminator_visible_layers(self, count=5):
-        disc = Sequential(name='style_gan_discriminator')
-        aInput = Input(shape=(3,64,64)) 
-        disc.add(aInput)
-        for idx in range(count):
-            layer = self._discriminator.model.layers[idx]
-            layer.trainable = False
-            disc.add(layer)
-        return disc
-
     # anomaly loss function
     def sum_of_residual(self, y_true, y_pred):
         return K.sum(K.abs(y_true - y_pred))
@@ -109,8 +99,6 @@ class StyleAAD2(AbstractADDModel):
         # define model
         intermidiate_model = Model(inputs=self._discriminator.model.layers[0].input, outputs=self._discriminator.model.layers[27].output)
         intermidiate_model.compile(loss='binary_crossentropy', optimizer='rmsprop')
-        #intermidiate_model.summary()
-
         return intermidiate_model
 
     # anomaly detection model define
@@ -125,12 +113,11 @@ class StyleAAD2(AbstractADDModel):
             return 5*tf.math.tanh(x)
 
         # encoder
-        input_model = self.get_discriminator_visible_layers()
-        input_model.trainable = False
-
         bn_axis = 3
 
-        x = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='conv1', kernel_regularizer=l2(weight_decay))(input_model.output)
+        input_tensor = Input(shape=(3,64,64))
+        x = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='conv1', kernel_regularizer=l2(weight_decay))(input_tensor)
+
         if batch_norm:
             x = BatchNormalization(axis=bn_axis, name='bn_conv1', momentum=batch_momentum)(x)
         x = LeakyReLU(alpha=0.2)(x)
@@ -152,13 +139,13 @@ class StyleAAD2(AbstractADDModel):
         x = Flatten()(x)
         x = Dense(self._latent_dimension, trainable=True)(x)
         x = Activation(custom_tanh)(x)
-        encoder = Model(inputs=input_model.input, outputs=x)
+        encoder = Model(inputs=input_tensor, outputs=x)
 
         # G & D feature
         G_mapping_out = self._generator.model_mapping(encoder.output)
         G_out = self._generator.model_synthesis(G_mapping_out)
         D_out= self._feature_extractor(G_out)
-        model = Model(inputs=input_model.input, outputs=[G_out, D_out])
+        model = Model(inputs=input_tensor, outputs=[G_out, D_out])
         model.compile(loss=self.sum_of_residual, loss_weights= [self._reconstruction_error_factor, self._discrimnator_feature_error_factor], optimizer='adam')
 
         # batchnorm learning phase fixed (test) : make non trainable
