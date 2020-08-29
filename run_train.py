@@ -44,10 +44,7 @@ def train_style_anomaly_detector(generatorDir, discriminatorDir, latentDim, reco
     style_gan_d = StyleGAN_D()
     style_gan_d.load_weights(discriminatorDir)
 
-    encoder_base = StyleGAN_D()
-    encoder_base.load_weights(discriminatorDir)
-
-    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, encoder_base.model, resultsDir, latentDim, reconstructionError, dicriminatorError)
+    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim, reconstructionError, dicriminatorError)
     anomaly_detector.preprocessing(dataDir)
     anomaly_detector.train(n_epochs=epochs)
 
