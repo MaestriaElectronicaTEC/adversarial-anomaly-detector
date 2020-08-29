@@ -50,6 +50,7 @@ class StyleAAD2(AbstractADDModel):
                     kernel_initializer='he_normal', kernel_regularizer=l2(weight_decay))(init)
             x = BatchNormalization(axis=3)(x)
             x = LeakyReLU(alpha=0.2)(x)
+            x = Dropout(0.05)(x)
             return x
 
         for c in range(cardinality):
@@ -61,6 +62,7 @@ class StyleAAD2(AbstractADDModel):
         group_merge = Concatenate(axis=3)(group_list)
         x = BatchNormalization(axis=3)(group_merge)
         x = LeakyReLU(alpha=0.2)(x)
+        x = Dropout(0.05)(x)
         return x
 
     def bottleneck_block(self, input, filters=64, cardinality=8, strides=1, weight_decay=5e-4):
@@ -76,6 +78,7 @@ class StyleAAD2(AbstractADDModel):
                 kernel_initializer='he_normal', kernel_regularizer=l2(weight_decay))(input)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU(alpha=0.2)(x)
+        x = Dropout(0.05)(x)
 
         x = self.grouped_convolution_block(x, grouped_channels, cardinality, strides, weight_decay)
         x = Conv2D(filters * 2, (1, 1), padding='same', use_bias=False, kernel_initializer='he_normal',
@@ -84,7 +87,18 @@ class StyleAAD2(AbstractADDModel):
 
         x = Add()([init, x])
         x = LeakyReLU(alpha=0.2)(x)
+        x = Dropout(0.05)(x)
         return x
+
+    def get_discriminator_visible_layers(self, count=5):
+        disc = Sequential(name='style_gan_discriminator')
+        aInput = Input(shape=(3,64,64)) 
+        disc.add(aInput)
+        for idx in range(count):
+            layer = self._discriminator.model.layers[idx]
+            layer.trainable = False
+            disc.add(layer)
+        return disc
 
     # anomaly loss function
     def sum_of_residual(self, y_true, y_pred):
@@ -111,38 +125,40 @@ class StyleAAD2(AbstractADDModel):
             return 5*tf.math.tanh(x)
 
         # encoder
+        input_model = self.get_discriminator_visible_layers()
+        input_model.trainable = False
 
-        input_tensor = Input(shape=(3,64,64))
         bn_axis = 3
 
-        x = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='conv1', kernel_regularizer=l2(weight_decay))(input_tensor)
+        x = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='conv1', kernel_regularizer=l2(weight_decay))(input_model.output)
         if batch_norm:
             x = BatchNormalization(axis=bn_axis, name='bn_conv1', momentum=batch_momentum)(x)
         x = LeakyReLU(alpha=0.2)(x)
         x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
+        x = Dropout(0.05)(x)
 
         # filters are cardinality * width * 2 for each depth level
-        for i in range(depth[0]):
+        for _ in range(depth[0]):
             x = self.bottleneck_block(x, 128, cardinality, strides=1, weight_decay=weight_decay)
 
         x = self.bottleneck_block(x, 256, cardinality, strides=2, weight_decay=weight_decay)
-        for idx in range(1, depth[1]):
+        for _ in range(1, depth[1]):
             x = self.bottleneck_block(x, 256, cardinality, strides=1, weight_decay=weight_decay)
 
         x = self.bottleneck_block(x, 512, cardinality, strides=2, weight_decay=weight_decay)
-        for idx in range(1, depth[2]):
+        for _ in range(1, depth[2]):
             x = self.bottleneck_block(x, 512, cardinality, strides=1, weight_decay=weight_decay)
 
         x = Flatten()(x)
         x = Dense(self._latent_dimension, trainable=True)(x)
         x = Activation(custom_tanh)(x)
-        encoder = Model(inputs=input_tensor, outputs=x)
+        encoder = Model(inputs=input_model.input, outputs=x)
 
         # G & D feature
         G_mapping_out = self._generator.model_mapping(encoder.output)
         G_out = self._generator.model_synthesis(G_mapping_out)
         D_out= self._feature_extractor(G_out)
-        model = Model(inputs=input_tensor, outputs=[G_out, D_out])
+        model = Model(inputs=input_model.input, outputs=[G_out, D_out])
         model.compile(loss=self.sum_of_residual, loss_weights= [self._reconstruction_error_factor, self._discrimnator_feature_error_factor], optimizer='adam')
 
         # batchnorm learning phase fixed (test) : make non trainable
@@ -151,14 +167,13 @@ class StyleAAD2(AbstractADDModel):
 
     #----------------------------------------------------------------------------
 
-    def __init__(self, generator, discriminator, encoder_base, results_dir, latent_dimension=200, r_error=0.90, d_error=0.10):
+    def __init__(self, generator, discriminator, results_dir, latent_dimension=200, r_error=0.90, d_error=0.10):
         super().__init__(format='channels_first', input_shape=64)
         self._reconstruction_error_factor = r_error
         self._discrimnator_feature_error_factor = d_error
         self._latent_dimension = latent_dimension
         self._generator = generator
         self._discriminator = discriminator
-        self._encoder_base = encoder_base
         self._feature_extractor = self.define_feature_extractor()
         self._anomaly_detector = self.define_anomaly_detector()
         self._results_dir = results_dir
