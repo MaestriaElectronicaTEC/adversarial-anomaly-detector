@@ -37,6 +37,8 @@ physical_devices = tf.config.list_physical_devices('GPU')
 if (len(physical_devices) > 0):
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
+DROPOUT = 0.2
+
 #----------------------------------------------------------------------------
 
 class StyleAAD2(AbstractADDModel):
@@ -53,7 +55,7 @@ class StyleAAD2(AbstractADDModel):
                     kernel_initializer='he_normal', kernel_regularizer=l2(weight_decay))(init)
             x = BatchNormalization(axis=3)(x)
             x = LeakyReLU(alpha=0.2)(x)
-            x = Dropout(0.05)(x)
+            x = Dropout(DROPOUT)(x)
             return x
 
         for c in range(cardinality):
@@ -65,7 +67,7 @@ class StyleAAD2(AbstractADDModel):
         group_merge = Concatenate(axis=3)(group_list)
         x = BatchNormalization(axis=3)(group_merge)
         x = LeakyReLU(alpha=0.2)(x)
-        x = Dropout(0.05)(x)
+        x = Dropout(DROPOUT)(x)
         return x
 
     def bottleneck_block(self, input, filters=64, cardinality=8, strides=1, weight_decay=5e-4):
@@ -81,7 +83,7 @@ class StyleAAD2(AbstractADDModel):
                 kernel_initializer='he_normal', kernel_regularizer=l2(weight_decay))(input)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU(alpha=0.2)(x)
-        x = Dropout(0.05)(x)
+        x = Dropout(DROPOUT)(x)
 
         x = self.grouped_convolution_block(x, grouped_channels, cardinality, strides, weight_decay)
         x = Conv2D(filters * 2, (1, 1), padding='same', use_bias=False, kernel_initializer='he_normal',
@@ -90,7 +92,7 @@ class StyleAAD2(AbstractADDModel):
 
         x = Add()([init, x])
         x = LeakyReLU(alpha=0.2)(x)
-        x = Dropout(0.05)(x)
+        x = Dropout(DROPOUT)(x)
         return x
 
     # anomaly loss function
@@ -108,18 +110,26 @@ class StyleAAD2(AbstractADDModel):
         return (n == int(math.sqrt(n) + 0.5)**2)
 
     # anomaly detection model define
-    def define_anomaly_detector(self, depths=(3, 4, 6, 3), cardinality=32, width=4, weight_decay=5e-4, batch_norm=True, batch_momentum=0.9):
+    def define_anomaly_detector(self, cardinality=32, width=4, weight_decay=5e-4, batch_norm=True, batch_momentum=0.9):
         self._feature_extractor.trainable = False
         self._generator.trainable = False
         self._generator.model_mapping.trainable = False
         self._generator.model_synthesis.trainable = False
 
         # encoder
-        size = 1
+        size = 2
         depth = 2
+        depths = ()
         bn_axis = 3
         model_res = 64
-        model_scale = int(2*(math.log(model_res,2)-1)) 
+        model_scale = int(2*(math.log(model_res,2)-1))
+
+        if size == 1:
+            depths = (3, 4, 6, 3)
+        if size == 2:
+            depths = (3, 4, 23, 3)
+        if size >= 3:
+            depths = (3, 8, 23, 3)
 
         input_tensor = Input(shape=(64,64,3))
         resnext = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='conv1', kernel_regularizer=l2(weight_decay))(input_tensor)
@@ -128,7 +138,7 @@ class StyleAAD2(AbstractADDModel):
             resnext = BatchNormalization(axis=bn_axis, name='bn_conv1', momentum=batch_momentum)(resnext)
         resnext = LeakyReLU(alpha=0.2)(resnext)
         resnext = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(resnext)
-        resnext = Dropout(0.05)(resnext)
+        resnext = Dropout(DROPOUT)(resnext)
 
         # filters are cardinality * width * 2 for each depth level
         for _ in range(depths[0]):
@@ -166,8 +176,9 @@ class StyleAAD2(AbstractADDModel):
                 x = Reshape((layer_r*2, layer_l*2))(x)
         else:
             if (size == 2):
-                x = Conv2D(1024, 1)(x) # scale down a bit
+                x = Conv2D(8192, 1)(x) # scale down a bit
                 x = LeakyReLU(alpha=0.2)(x)
+                x = Dropout(DROPOUT)(x)
                 x = Reshape((256, 256))(x)
             else:
                 x = Reshape((256, 512))(x) # all weights used
@@ -175,9 +186,11 @@ class StyleAAD2(AbstractADDModel):
         while (depth > 0): # See https://github.com/OliverRichter/TreeConnect/blob/master/cifar.py - TreeConnect inspired layers instead of dense layers.
             x = LocallyConnected1D(layer_r, 1)(x)
             x = LeakyReLU(alpha=0.2)(x)
+            x = Dropout(DROPOUT)(x)
             x = Permute((2, 1))(x)
             x = LocallyConnected1D(layer_l, 1)(x)
             x = LeakyReLU(alpha=0.2)(x)
+            x = Dropout(DROPOUT)(x)
             x = Permute((2, 1))(x)
             if x_init is not None:
                 x = Add()([x, x_init])   # add skip connection
