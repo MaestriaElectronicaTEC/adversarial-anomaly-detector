@@ -3,6 +3,7 @@ from models.AADBase import AbstractADDModel
 import cv2
 import os
 from os import makedirs
+import math
 
 from tensorflow.keras import backend as K
 from tensorflow.keras.datasets.mnist import load_data
@@ -23,6 +24,8 @@ from tensorflow.keras.layers import Add
 from tensorflow.keras.layers import Concatenate
 from tensorflow.keras.layers import MaxPooling2D
 from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import LocallyConnected1D
+from tensorflow.keras.layers import Permute
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.utils import Progbar
@@ -101,55 +104,94 @@ class StyleAAD2(AbstractADDModel):
         intermidiate_model.compile(loss='binary_crossentropy', optimizer='rmsprop')
         return intermidiate_model
 
+    def is_square(self, n):
+        return (n == int(math.sqrt(n) + 0.5)**2)
+
     # anomaly detection model define
-    def define_anomaly_detector(self, depth=(3, 4, 6, 3), cardinality=32, width=4, weight_decay=5e-4, batch_norm=True, batch_momentum=0.9):
+    def define_anomaly_detector(self, depths=(3, 4, 6, 3), cardinality=32, width=4, weight_decay=5e-4, batch_norm=True, batch_momentum=0.9):
         self._feature_extractor.trainable = False
         self._generator.trainable = False
         self._generator.model_mapping.trainable = False
         self._generator.model_synthesis.trainable = False
 
-        # define custom activation function
-        def custom_tanh(x):
-            return 5*tf.math.tanh(x)
-
         # encoder
+        size = 1
+        depth = 2
         bn_axis = 3
+        model_res = 64
+        model_scale = int(2*(math.log(model_res,2)-1)) 
 
         input_tensor = Input(shape=(3,64,64))
-        x = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='conv1', kernel_regularizer=l2(weight_decay))(input_tensor)
+        resnext = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='conv1', kernel_regularizer=l2(weight_decay))(input_tensor)
 
         if batch_norm:
-            x = BatchNormalization(axis=bn_axis, name='bn_conv1', momentum=batch_momentum)(x)
-        x = LeakyReLU(alpha=0.2)(x)
-        x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
-        x = Dropout(0.05)(x)
+            resnext = BatchNormalization(axis=bn_axis, name='bn_conv1', momentum=batch_momentum)(resnext)
+        resnext = LeakyReLU(alpha=0.2)(resnext)
+        resnext = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(resnext)
+        resnext = Dropout(0.05)(resnext)
 
         # filters are cardinality * width * 2 for each depth level
-        for _ in range(depth[0]):
-            x = self.bottleneck_block(x, 128, cardinality, strides=1, weight_decay=weight_decay)
+        for _ in range(depths[0]):
+            resnext = self.bottleneck_block(resnext, 128, cardinality, strides=1, weight_decay=weight_decay)
 
-        x = self.bottleneck_block(x, 256, cardinality, strides=2, weight_decay=weight_decay)
-        for _ in range(1, depth[1]):
-            x = self.bottleneck_block(x, 256, cardinality, strides=1, weight_decay=weight_decay)
+        resnext = self.bottleneck_block(resnext, 256, cardinality, strides=2, weight_decay=weight_decay)
+        for _ in range(1, depths[1]):
+            resnext = self.bottleneck_block(resnext, 256, cardinality, strides=1, weight_decay=weight_decay)
 
-        x = self.bottleneck_block(x, 512, cardinality, strides=2, weight_decay=weight_decay)
-        for _ in range(1, depth[2]):
-            x = self.bottleneck_block(x, 512, cardinality, strides=1, weight_decay=weight_decay)
+        layer_size = model_scale*8*8*8
+        if self.is_square(layer_size): # work out layer dimensions
+            layer_l = int(math.sqrt(layer_size)+0.5)
+            layer_r = layer_l
+        else:
+            layer_m = math.log(math.sqrt(layer_size),2)
+            layer_l = 2**math.ceil(layer_m)
+            layer_r = layer_size // layer_l
+        layer_l = int(layer_l)
+        layer_r = int(layer_r)
 
-        x = Flatten()(x)
-        x = Dense(self._latent_dimension, trainable=True)(x)
-        x = Activation(custom_tanh)(x)
-        encoder = Model(inputs=input_tensor, outputs=x)
+        x_init = None
+        x = resnext
+
+        if (depth < 0):
+            depth = 1
+
+        if (size <= 1):
+            if (size <= 0):
+                x = Conv2D(model_scale*8, 1)(x) # scale down
+                x = LeakyReLU(alpha=0.2)(x)
+                x = Reshape((layer_r, layer_l))(x)
+            else:
+                x = Conv2D(model_scale*8*4, 1)(x) # scale down a little
+                x = LeakyReLU(alpha=0.2)(x)
+                x = Reshape((layer_r*2, layer_l*2))(x)
+        else:
+            if (size == 2):
+                x = Conv2D(1024, 1)(x) # scale down a bit
+                x = LeakyReLU(alpha=0.2)(x)
+                x = Reshape((256, 256))(x)
+            else:
+                x = Reshape((256, 512))(x) # all weights used
+
+        while (depth > 0): # See https://github.com/OliverRichter/TreeConnect/blob/master/cifar.py - TreeConnect inspired layers instead of dense layers.
+            x = LocallyConnected1D(layer_r, 1)(x)
+            x = LeakyReLU(alpha=0.2)(x)
+            x = Permute((2, 1))(x)
+            x = LocallyConnected1D(layer_l, 1)(x)
+            x = LeakyReLU(alpha=0.2)(x)
+            x = Permute((2, 1))(x)
+            if x_init is not None:
+                x = Add()([x, x_init])   # add skip connection
+            x_init = x
+            depth-=1
+
+        x = Reshape((model_scale, 512))(x) # train against all dlatent values
 
         # G & D feature
-        G_mapping_out = self._generator.model_mapping(encoder.output)
-        G_out = self._generator.model_synthesis(G_mapping_out)
+        G_out = self._generator.model_synthesis(x)
         D_out= self._feature_extractor(G_out)
         model = Model(inputs=input_tensor, outputs=[G_out, D_out])
         model.compile(loss=self.sum_of_residual, loss_weights= [self._reconstruction_error_factor, self._discrimnator_feature_error_factor], optimizer='adam')
 
-        # batchnorm learning phase fixed (test) : make non trainable
-        K.set_learning_phase(0)
         return model
 
     #----------------------------------------------------------------------------
