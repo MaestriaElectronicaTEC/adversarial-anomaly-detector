@@ -121,7 +121,7 @@ class StyleAAD2(AbstractADDModel):
         model_res = 64
         model_scale = int(2*(math.log(model_res,2)-1)) 
 
-        input_tensor = Input(shape=(3,64,64))
+        input_tensor = Input(shape=(64,64,3))
         resnext = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='conv1', kernel_regularizer=l2(weight_decay))(input_tensor)
 
         if batch_norm:
@@ -197,7 +197,7 @@ class StyleAAD2(AbstractADDModel):
     #----------------------------------------------------------------------------
 
     def __init__(self, generator, discriminator, results_dir, latent_dimension=200, r_error=0.90, d_error=0.10):
-        super().__init__(format='channels_first', input_shape=64)
+        super().__init__(format='channels_last', input_shape=64)
         self._reconstruction_error_factor = r_error
         self._discrimnator_feature_error_factor = d_error
         self._latent_dimension = latent_dimension
