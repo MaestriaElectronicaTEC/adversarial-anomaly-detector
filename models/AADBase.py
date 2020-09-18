@@ -70,7 +70,7 @@ class AbstractADDModel(AbstractModel):
 
         return generate_samples(self._dataset, n_batch)
 
-    def train(self, n_epochs=10, n_batch=128):
+    def train(self, n_epochs=10, n_batch=32):
         #asserts
         assert self._feature_extractor != None
         assert self._anomaly_detector != None
@@ -270,8 +270,7 @@ class AbstractADDModel(AbstractModel):
         res = self._anomaly_detector.predict(test_img)
 
         # data pos-processing
-        res2 = (res[0]*127.5)+127.5
-        res2 = res2.astype(np.uint8)
+        res2 = np.clip((res[0]+1)*0.5, 0, 1)
 
         if (self._svm is not None):
             # classify

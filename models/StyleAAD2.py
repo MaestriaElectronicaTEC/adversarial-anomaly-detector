@@ -131,7 +131,7 @@ class StyleAAD2(AbstractADDModel):
         if size >= 3:
             depths = (3, 8, 23, 3)
 
-        input_tensor = Input(shape=(64,64,3))
+        input_tensor = Input(shape=(3,64,64))
         resnext = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='conv1', kernel_regularizer=l2(weight_decay))(input_tensor)
 
         if batch_norm:
