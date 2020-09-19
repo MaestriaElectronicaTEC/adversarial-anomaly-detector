@@ -204,6 +204,9 @@ class StyleAAD2(AbstractADDModel):
         P3 = Conv2D(TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="same", name="fpn_p3")(P3)
         P3 = LeakyReLU(alpha=0.2)(P3)
         P3 = Dropout(DROPOUT)(P3)
+        P3 = Conv2D(8192, 1)(P3)
+        P3 = LeakyReLU(alpha=0.2)(P3)
+        P3 = Dropout(DROPOUT)(P3)
 
         output_1 = self.map2style(P2, int(model_scale/2), depth)
         output_2 = self.map2style(P3, int(model_scale/2), depth)
