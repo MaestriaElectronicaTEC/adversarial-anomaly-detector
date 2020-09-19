@@ -117,7 +117,7 @@ class StyleAAD2(AbstractADDModel):
         if (depth < 0):
             depth = 1
 
-        x = Reshape((256, 512))(x) # all weights used
+        x = Reshape((256, 256))(x) # all weights used
 
         while (depth > 0): # See https://github.com/OliverRichter/TreeConnect/blob/master/cifar.py - TreeConnect inspired layers instead of dense layers.
             x = LocallyConnected1D(layer_r, 1)(x)
@@ -155,7 +155,7 @@ class StyleAAD2(AbstractADDModel):
         self._generator.model_synthesis.trainable = False
 
         # encoder
-        size = 3
+        size = 2
         depth = 2
         depths = ()
         bn_axis = 3
@@ -195,7 +195,15 @@ class StyleAAD2(AbstractADDModel):
         
         # Attach 3x3 conv to all P layers to get the final feature maps. --> Reduce aliasing effect of upsampling
         P2 = Conv2D(TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="same", name="fpn_p2")(P2)
+        P2 = LeakyReLU(alpha=0.2)(P2)
+        P2 = Dropout(DROPOUT)(P2)
+        P2 = Conv2D(2048, 1)(P2)
+        P2 = LeakyReLU(alpha=0.2)(P2)
+        P2 = Dropout(DROPOUT)(P2)
+
         P3 = Conv2D(TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="same", name="fpn_p3")(P3)
+        P3 = LeakyReLU(alpha=0.2)(P3)
+        P3 = Dropout(DROPOUT)(P3)
 
         output_1 = self.map2style(P2, int(model_scale/2), depth)
         output_2 = self.map2style(P3, int(model_scale/2), depth)
