@@ -70,6 +70,26 @@ def train_anomaly_grid_search(generatorDir, discriminatorDir, anomalyDetectorDir
     anomaly_detector.load(aadModelDir)
     anomaly_detector.train_svm_with_grid_search(normal, anomaly)
 
+def train_style_anomaly_grid_search(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim, normlaDataDir, anomalyDataDir, resultsDir):
+    style_gan_g = StyleGAN_G()
+    style_gan_g.load_weights(generatorDir)
+
+    style_gan_d = StyleGAN_D()
+    style_gan_d.load_weights(discriminatorDir)
+
+    aadModelDir = {
+        "aad" : anomalyDetectorDir,
+        "svc" : '',
+        "scaler" : ''
+    }
+
+    normal = load_test_data(normlaDataDir, 64, 'channels_first')
+    anomaly = load_test_data(anomalyDataDir, 64, 'channels_first')
+
+    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
+    anomaly_detector.load(aadModelDir)
+    anomaly_detector.train_svm_with_grid_search(normal, anomaly)
+
 def train_anomaly_classifier(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim, C, gamma, kernel, degree, normlaDataDir, anomalyDataDir, resultsDir):
     modelDir = {
         "generator": generatorDir,
@@ -89,6 +109,26 @@ def train_anomaly_classifier(generatorDir, discriminatorDir, anomalyDetectorDir,
     anomaly = load_test_data(anomalyDataDir)
     
     anomaly_detector = AAD(gan.get_generator(), gan.get_discriminator(), resultsDir, latentDim)
+    anomaly_detector.load(aadModelDir)
+    anomaly_detector.train_svm(C, gamma, degree, kernel, normal, anomaly)
+
+def train_style_anomaly_classifier(generatorDir, discriminatorDir, anomalyDetectorDir, latentDim, C, gamma, kernel, degree, normlaDataDir, anomalyDataDir, resultsDir):
+    style_gan_g = StyleGAN_G()
+    style_gan_g.load_weights(generatorDir)
+
+    style_gan_d = StyleGAN_D()
+    style_gan_d.load_weights(discriminatorDir)
+
+    aadModelDir = {
+        "aad" : anomalyDetectorDir,
+        "svc" : '',
+        "scaler" : ''
+    }
+
+    normal = load_test_data(normlaDataDir, 64, 'channels_first')
+    anomaly = load_test_data(anomalyDataDir, 64, 'channels_first')
+
+    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
     anomaly_detector.load(aadModelDir)
     anomaly_detector.train_svm(C, gamma, degree, kernel, normal, anomaly)
 
@@ -146,7 +186,31 @@ def cmdline(argv):
     p.add_argument(     '--anomalyDataDir',     help='Path of the dataset with anomal samples', default='')
     p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
 
+    p = add_command(    'train_style_anomaly_grid_search','Training of the Styel Adversarial Anomaly Detector classifier.')
+
+    p.add_argument(     '--generatorDir',       help='Path of the GAN\'s generator weights', default='')
+    p.add_argument(     '--discriminatorDir',   help='Path of the GAN\'s discriminator weights', default='')
+    p.add_argument(     '--anomalyDetectorDir', help='Path of the AnomalyDetector weights', default='')
+    p.add_argument(     '--latentDim',          help='Latent dimension of the GAN', type=int, default=100)
+    p.add_argument(     '--normlaDataDir',      help='Path of the dataset with healthy samples', default='')
+    p.add_argument(     '--anomalyDataDir',     help='Path of the dataset with anomal samples', default='')
+    p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
+
     p = add_command(    'train_anomaly_classifier','Training of the Adversarial Anomaly Detector classifier.')
+
+    p.add_argument(     '--generatorDir',       help='Path of the GAN\'s generator weights', default='')
+    p.add_argument(     '--discriminatorDir',   help='Path of the GAN\'s discriminator weights', default='')
+    p.add_argument(     '--anomalyDetectorDir', help='Path of the AnomalyDetector weights', default='')
+    p.add_argument(     '--latentDim',          help='Latent dimension of the GAN', type=int, default=100)
+    p.add_argument(     '--C',                  help='SVM C parameter', type=float, default=-1)
+    p.add_argument(     '--gamma',              help='SVM gamma parameter', type=float, default=0.001)
+    p.add_argument(     '--kernel',             help='SVM kernel parameter', default='rbf')
+    p.add_argument(     '--degree',             help='SVM degree parameter', type=int, default=3)
+    p.add_argument(     '--normlaDataDir',      help='Path of the dataset with healthy samples', default='')
+    p.add_argument(     '--anomalyDataDir',     help='Path of the dataset with anomal samples', default='')
+    p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
+
+    p = add_command(    'train_style_anomaly_classifier','Training of the Adversarial Anomaly Detector classifier.')
 
     p.add_argument(     '--generatorDir',       help='Path of the GAN\'s generator weights', default='')
     p.add_argument(     '--discriminatorDir',   help='Path of the GAN\'s discriminator weights', default='')

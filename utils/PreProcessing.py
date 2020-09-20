@@ -63,15 +63,19 @@ def generate_samples(dataset, n_samples):
     y = ones((n_samples, 1))
     return X, y
 
-def load_test_data(data_dir):
+def load_test_data(data_dir, dim=48, format='channels_last'):
     img_list = glob.glob(data_dir + '*.png')
     images = list()
     
     for img_path in img_list:
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(img, (48, 48), interpolation = cv2.INTER_NEAREST)
+        img = cv2.resize(img, (dim, dim), interpolation = cv2.INTER_CUBIC)
         img = (img.astype(np.float32) - 127.5) / 127.5
+
+        if format == 'channels_first':
+            img = img.transpose([2, 0, 1])
+
         images.append(img)
         
     print('Found ' + str(len(images)) + ' images for test.')
