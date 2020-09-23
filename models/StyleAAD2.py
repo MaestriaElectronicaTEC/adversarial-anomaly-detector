@@ -34,6 +34,11 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.regularizers import l2
 import tensorflow as tf
 
+import sys
+sys.path.append('../metrics')
+
+from metrics.lpips import lpips
+
 physical_devices = tf.config.list_physical_devices('GPU')
 if (len(physical_devices) > 0):
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -136,6 +141,18 @@ class StyleAAD2(AbstractADDModel):
         x = Reshape((model_scale, 512))(x) # train against all dlatent values
         return x
 
+    def lpips_setup(self):
+        session = tf.compat.v1.Session()
+
+        tf.compat.v1.disable_eager_execution()
+        image0_ph = tf.compat.v1.placeholder(tf.float32)
+        image1_ph = tf.compat.v1.placeholder(tf.float32)
+
+        self._lpips = session.make_callable(lpips(image0_ph, image1_ph, model="net-lin", net="vgg", version="0.1"), [image0_ph, image1_ph])
+
+    def lpips_loss(self, y_true, y_pred):
+        return self._lpips(y_true, y_pred)
+
     # anomaly loss function
     def sum_of_residual(self, y_true, y_pred):
         return K.sum(K.abs(y_true - y_pred))
@@ -216,17 +233,23 @@ class StyleAAD2(AbstractADDModel):
         # G & D feature
         G_out = self._generator.model_synthesis(x)
         D_out= self._feature_extractor(G_out)
-        model = Model(inputs=input_tensor, outputs=[G_out, D_out])
-        model.compile(loss=self.sum_of_residual, loss_weights= [self._reconstruction_error_factor, self._discrimnator_feature_error_factor], optimizer='adam')
+
+        # setup loss functions
+        self.lpips_setup()
+        loss_functions = [self.sum_of_residual, self.sum_of_residual, self.lpips_loss]
+
+        model = Model(inputs=input_tensor, outputs=[G_out, D_out, G_out])
+        model.compile(loss=loss_functions, loss_weights= [self._reconstruction_error_factor, self._discrimnator_feature_error_factor, self._lpips_factor], optimizer='adam')
 
         return model
 
     #----------------------------------------------------------------------------
 
-    def __init__(self, generator, discriminator, results_dir, latent_dimension=200, r_error=0.90, d_error=0.10):
-        super().__init__(format='channels_last', input_shape=64)
+    def __init__(self, generator, discriminator, results_dir, latent_dimension=200, r_error=0.90, d_error=0.10, l_error=0.8):
+        super().__init__(format='channels_last', input_shape=64, enable_lpips=True)
         self._reconstruction_error_factor = r_error
         self._discrimnator_feature_error_factor = d_error
+        self._lpips_factor = l_error
         self._latent_dimension = latent_dimension
         self._generator = generator
         self._discriminator = discriminator
@@ -234,6 +257,7 @@ class StyleAAD2(AbstractADDModel):
         self._anomaly_detector = self.define_anomaly_detector()
         self._results_dir = results_dir
         self._metrics = None
+        self._lpips = None
         # make folder for results
         makedirs(self._results_dir, exist_ok=True)
 

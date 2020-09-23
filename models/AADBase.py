@@ -37,7 +37,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 class AbstractADDModel(AbstractModel):
 
-    def __init__(self, format='channels_last', input_shape=48):
+    def __init__(self, format='channels_last', input_shape=48, enable_lpips=False):
         self._reconstruction_error_factor = 0.9
         self._discrimnator_feature_error_factor = 0.1
         self._latent_dimension = 200
@@ -51,6 +51,7 @@ class AbstractADDModel(AbstractModel):
         self._scaler_dir = ''
         self._format = format
         self._input_shape = input_shape
+        self._lpips_enabled = enable_lpips
 
     def load(self, model_dirs):
         if (self._anomaly_detector is not None):
@@ -90,10 +91,17 @@ class AbstractADDModel(AbstractModel):
                 x, _ = self.generate_real_samples(n_batch)
 
                 d_x = self._feature_extractor.predict(x)
-                loss, rec_loss, disc_loss = self._anomaly_detector.train_on_batch(x, [x, d_x])
 
-                # summarize loss on this batch
-                progress_bar.update(i, values=[('loss', loss), ('rec loss', rec_loss), ('disc loss', disc_loss)])
+                if self._lpips_enabled:
+                    loss, rec_loss, disc_loss, lpips_loss = self._anomaly_detector.train_on_batch(x, [x, d_x, x])
+
+                    # summarize loss on this batch
+                    progress_bar.update(i, values=[('loss', loss), ('rec loss', rec_loss), ('disc loss', disc_loss), ('lpips loss', lpips_loss)])
+                else:
+                    loss, rec_loss, disc_loss = self._anomaly_detector.train_on_batch(x, [x, d_x])
+
+                    # summarize loss on this batch
+                    progress_bar.update(i, values=[('loss', loss), ('rec loss', rec_loss), ('disc loss', disc_loss)])
 
             # record history
             loss_hist.append(loss)
