@@ -151,7 +151,7 @@ class StyleAAD2(AbstractADDModel):
         self._lpips = session.make_callable(lpips(image0_ph, image1_ph, model="net-lin", net="vgg", version="0.1"), [image0_ph, image1_ph])
 
     def lpips_loss(self, y_true, y_pred):
-        return self._lpips(y_true, y_pred)
+        return lpips(y_true, y_pred, "net-lin", "vgg", "0.1")
 
     # anomaly loss function
     def sum_of_residual(self, y_true, y_pred):
@@ -235,7 +235,6 @@ class StyleAAD2(AbstractADDModel):
         D_out= self._feature_extractor(G_out)
 
         # setup loss functions
-        self.lpips_setup()
         loss_functions = [self.sum_of_residual, self.sum_of_residual, self.lpips_loss]
 
         model = Model(inputs=input_tensor, outputs=[G_out, D_out, G_out])

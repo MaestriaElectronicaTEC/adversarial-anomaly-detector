@@ -70,7 +70,6 @@ def lpips(input0, input1, model='net-lin', net='alex', version=0.1):
         if os.path.isfile(os.path.join(cache_dir, pb_fname)):
             break
 
-    print('pb model:', os.path.join(cache_dir, pb_fname))
     with open(os.path.join(cache_dir, pb_fname), 'rb') as f:
         graph_def = tf.compat.v1.GraphDef()
         graph_def.ParseFromString(f.read())
