@@ -308,11 +308,17 @@ class AbstractADDModel(AbstractModel):
         test_img2 = (test_img*127.5)+127.5
         test_img2 = test_img2.astype(np.uint8)
 
+        original_img = test_img2[0]
+        reconstructed_img = res[0]
+        if self._format == 'channels_first':
+            original_img = original_img.transpose([1, 2, 0])
+            reconstructed_img = reconstructed_img.transpose([1, 2, 0])
+
         # save original image
         pyplot.figure(3, figsize=(3, 3))
         #pyplot.title('Original')
         pyplot.axis('off')
-        pyplot.imshow(test_img2[0])
+        pyplot.imshow(original_img)
         pyplot.savefig(self._results_dir + '/original_sample.pdf')
 
         pyplot.show()
@@ -321,7 +327,7 @@ class AbstractADDModel(AbstractModel):
         pyplot.figure(3, figsize=(3, 3))
         #pyplot.title('Reconstructed')
         pyplot.axis('off')
-        pyplot.imshow(res[0])
+        pyplot.imshow(reconstructed_img)
         pyplot.savefig(self._results_dir + '/reconstructed_sample.pdf')
 
         pyplot.show()
