@@ -142,6 +142,17 @@ def cmdline(argv):
     p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
     p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
 
+    p = add_command(    'plot_style_anomaly',         'Remove anomalies from some input image.')
+
+    p.add_argument(     '--generatorDir',       help='Path of the GAN\'s generator weights', default='')
+    p.add_argument(     '--discriminatorDir',   help='Path of the GAN\'s discriminator weights', default='')
+    p.add_argument(     '--anomalyDetectorDir', help='Path of the AnomalyDetector weights', default='')
+    p.add_argument(     '--SVCDir',             help='Path of the Support Vector Machine weights', default='')
+    p.add_argument(     '--ScalerDir',          help='Path of the Scaler weights', default='')
+    p.add_argument(     '--latentDim',          help='Latent dimension of the GAN', type=int, default=100)
+    p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
+    p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
+
     p = add_command(    'evaluate_anomaly_detector', 'Plot anomalies from a dataset.')
 
     p.add_argument(     '--generatorDir',       help='Path of the GAN\'s generator weights', default='')
