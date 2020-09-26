@@ -3,8 +3,11 @@
 import sys
 import argparse
 
-from models.DCGAN import DCGAN
 from models.AAD import AAD
+from models.DCGAN import DCGAN
+from models.StyleAAD2 import StyleAAD2
+from models.stylegan import StyleGAN_G
+from models.stylegan import StyleGAN_D
 from utils.PreProcessing import load_test_data
 
 #----------------------------------------------------------------------------
@@ -36,6 +39,25 @@ def plot_anomaly(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDir, Sca
     }
 
     anomaly_detector = AAD(gan.get_generator(), gan.get_discriminator(), resultsDir, latentDim)
+    anomaly_detector.load(aadModelDir)
+    anomaly_detector.preprocessing(dataDir)
+    anomaly_detector.plot()
+
+def plot_style_anomaly(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDir, ScalerDir, latentDim, dataDir, resultsDir):
+    # load the style gan
+    style_gan_g = StyleGAN_G()
+    style_gan_g.load_weights(generatorDir)
+
+    style_gan_d = StyleGAN_D()
+    style_gan_d.load_weights(discriminatorDir)
+
+    aadModelDir = {
+        "aad" : anomalyDetectorDir,
+        "svc" : SVCDir,
+        "scaler" : ScalerDir
+    }
+
+    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
     anomaly_detector.load(aadModelDir)
     anomaly_detector.preprocessing(dataDir)
     anomaly_detector.plot()
