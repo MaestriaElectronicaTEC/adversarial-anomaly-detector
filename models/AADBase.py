@@ -280,18 +280,12 @@ class AbstractADDModel(AbstractModel):
         else:
             return np_scores, -1, res2
 
-    def plot(self):
-        # asserts
-        assert self._anomaly_detector != None
-        assert self._feature_extractor != None
-
-        # get a testing image from the dataset
-        test_img = self.generate_real_samples(1)[0]
+    def plot_aux(self, img, index=0):
         start = cv2.getTickCount()
 
-        score, class_predicted, res = self.predict(test_img)
-
         # compute the image reconstrcution score
+        score, class_predicted, res = self.predict(img)
+
         time = (cv2.getTickCount() - start) / cv2.getTickFrequency() * 1000
 
         # classify image
@@ -305,10 +299,10 @@ class AbstractADDModel(AbstractModel):
         print("Processing time: " + str(time))
 
         # data pos-processing
-        test_img2 = (test_img*127.5)+127.5
-        test_img2 = test_img2.astype(np.uint8)
+        test_img = (img*127.5)+127.5
+        test_img = test_img.astype(np.uint8)
 
-        original_img = test_img2[0]
+        original_img = test_img[0]
         reconstructed_img = res[0]
         if self._format == 'channels_first':
             original_img = original_img.transpose([1, 2, 0])
@@ -316,21 +310,39 @@ class AbstractADDModel(AbstractModel):
 
         # save original image
         pyplot.figure(3, figsize=(3, 3))
-        #pyplot.title('Original')
         pyplot.axis('off')
         pyplot.imshow(original_img)
-        pyplot.savefig(self._results_dir + '/original_sample.pdf')
+        pyplot.savefig(self._results_dir + '/original_sample_{}.pdf'.format(str(index)))
 
         pyplot.show()
 
         # save reconstructed image
         pyplot.figure(3, figsize=(3, 3))
-        #pyplot.title('Reconstructed')
         pyplot.axis('off')
         pyplot.imshow(reconstructed_img)
-        pyplot.savefig(self._results_dir + '/reconstructed_sample.pdf')
+        pyplot.savefig(self._results_dir + '/reconstructed_sample_{}.pdf'.format(str(index)))
 
         pyplot.show()
+
+    def plot(self):
+        # asserts
+        assert self._anomaly_detector != None
+        assert self._feature_extractor != None
+
+        # get a testing image from the dataset
+        test_img = self.generate_real_samples(1)[0]
+        self.plot_aux(test_img)
+
+    def plot_batch(self, n_batch):
+        # asserts
+        assert self._anomaly_detector != None
+        assert self._feature_extractor != None
+
+        # get a testing image from the dataset
+        batch_images = self.generate_real_samples(n_batch)
+
+        for index, img in np.ndenumerate(batch_images):
+            self.plot_aux(img, index)
 
     def evaluate_subset(self, test_data):
         normal = list()
