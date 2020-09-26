@@ -224,7 +224,7 @@ class StyleAAD2(AbstractADDModel):
     #----------------------------------------------------------------------------
 
     def __init__(self, generator, discriminator, results_dir, latent_dimension=200, r_error=0.90, d_error=0.10):
-        super().__init__(format='channels_last', input_shape=64)
+        super().__init__(format='channels_first', input_shape=64)
         self._reconstruction_error_factor = r_error
         self._discrimnator_feature_error_factor = d_error
         self._latent_dimension = latent_dimension
