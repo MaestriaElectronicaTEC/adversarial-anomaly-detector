@@ -7,10 +7,9 @@ from numpy.random import randn
 from numpy.random import randint
 
 from joblib import dump, load
-
 from sklearn.preprocessing import StandardScaler
-
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from skimage.color import rgb2lab, deltaE_cie76, deltaE_ciede2000
 
 #----------------------------------------------------------------------------
 
@@ -80,3 +79,39 @@ def load_test_data(data_dir, dim=48, format='channels_last'):
         
     print('Found ' + str(len(images)) + ' images for test.')
     return np.asarray(images)
+
+def postprocessing(ref_img, rec_image):
+    blur = cv2.blur(ref_img,(8,8))
+
+    cielab_ref = rgb2lab(rec_image)
+    cielab_rec = rgb2lab(blur)
+    cielab_diff = deltaE_ciede2000(cielab_ref, cielab_rec)
+
+    ret, thresh = cv2.threshold(cielab_diff.astype(np.uint8),127,255,cv2.THRESH_OTSU)
+    # noise removal
+    kernel = np.ones((3,3),np.uint8)
+    opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
+    # sure background area
+    sure_bg = cv2.dilate(opening,kernel,iterations=3)
+    # Finding sure foreground area
+    dist_transform = cv2.distanceTransform(opening,cv2.DIST_L2,5)
+    ret, sure_fg = cv2.threshold(dist_transform,0.7*dist_transform.max(),255,0)
+    # Finding unknown region
+    sure_fg = np.uint8(sure_fg)
+    unknown = cv2.subtract(sure_bg,sure_fg)
+
+    cnts = cv2.findContours(unknown.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+
+    img_copy = ref_img.copy()
+    # loop over the contours
+    for c in cnts:
+        # compute the bounding box of the contour and then draw the
+        # bounding box on both input images to represent where the two
+        # images differ
+        (x, y, w, h) = cv2.boundingRect(c)
+        cv2.rectangle(img_copy, (x, y), (x + w, y + h), (255, 0, 0), 1)
+        
+    img_copy = np.clip(img_copy, 0, 1)
+    return img_copy
+    

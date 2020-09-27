@@ -26,7 +26,7 @@ import sys
 sys.path.append('../utils')
 
 from models.BaseModel import AbstractModel
-from utils.PreProcessing import load_real_samples, generate_samples, standard_normalization
+from utils.PreProcessing import load_real_samples, generate_samples, standard_normalization, postprocessing
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -288,12 +288,6 @@ class AbstractADDModel(AbstractModel):
 
         time = (cv2.getTickCount() - start) / cv2.getTickFrequency() * 1000
 
-        # classify image
-        if (class_predicted == 0):
-            print("Image is a healthy sample")
-        else:
-            print("Image has anomalies!")
-
         # print results
         print("Anomaly score : ", score[0, 0])
         print("Processing time: " + str(time))
@@ -307,6 +301,13 @@ class AbstractADDModel(AbstractModel):
         if self._format == 'channels_first':
             original_img = original_img.transpose([1, 2, 0])
             reconstructed_img = reconstructed_img.transpose([1, 2, 0])
+
+        # classify image
+        if (class_predicted == 0):
+            print("Image is a healthy sample")
+        else:
+            original_img = postprocessing(original_img, reconstructed_img)
+            print("Image has anomalies!")
 
         # save original image
         pyplot.figure(3, figsize=(3, 3))
