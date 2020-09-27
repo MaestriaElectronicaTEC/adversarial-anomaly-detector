@@ -342,7 +342,8 @@ class AbstractADDModel(AbstractModel):
         # get a testing image from the dataset
         batch_images = self.generate_real_samples(n_batch)
 
-        for index, img in np.ndenumerate(batch_images):
+        for index in range(n_batch):
+            img = batch_images[index,:,:,:]
             self.plot_aux(img, index)
 
     def evaluate_subset(self, test_data):
