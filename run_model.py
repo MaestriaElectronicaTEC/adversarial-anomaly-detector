@@ -76,10 +76,11 @@ def plot_anomaly_batch(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDi
         "scaler" : ScalerDir
     }
 
+    data = load_test_data(dataDir, 64, 'channels_first')
+
     anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
     anomaly_detector.load(aadModelDir)
-    anomaly_detector.preprocessing(dataDir)
-    anomaly_detector.plot_batch(dataBatch)
+    anomaly_detector.plot_batch(data)
 
 def evaluate_anomaly_detector(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDir, ScalerDir, latentDim, normlaDataDir, anomalyDataDir, resultsDir):
     modelDir = {

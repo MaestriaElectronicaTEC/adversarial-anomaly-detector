@@ -62,6 +62,13 @@ def generate_samples(dataset, n_samples):
     y = ones((n_samples, 1))
     return X, y
 
+def adjust_dynamic_range(data, drange_in, drange_out):
+    if drange_in != drange_out:
+        scale = (np.float32(drange_out[1]) - np.float32(drange_out[0])) / (np.float32(drange_in[1]) - np.float32(drange_in[0]))
+        bias = (np.float32(drange_out[0]) - np.float32(drange_in[0]) * scale)
+        data = data * scale + bias
+    return data
+
 def load_test_data(data_dir, dim=48, format='channels_last'):
     img_list = glob.glob(data_dir + '*.png')
     images = list()
@@ -113,5 +120,6 @@ def postprocessing(ref_img, rec_image):
         cv2.rectangle(img_copy, (x, y), (x + w, y + h), (255, 0, 0), 1)
         
     img_copy = np.clip(img_copy, 0, 1)
-    return img_copy
+    img_copy = adjust_dynamic_range(img_copy, [0, 1], [0, 255])
+    return img_copy.astype(np.uint8)
     

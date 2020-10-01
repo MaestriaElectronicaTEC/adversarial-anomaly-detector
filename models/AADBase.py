@@ -334,17 +334,15 @@ class AbstractADDModel(AbstractModel):
         test_img = self.generate_real_samples(1)[0]
         self.plot_aux(test_img)
 
-    def plot_batch(self, n_batch):
+    def plot_batch(self, test_data):
         # asserts
         assert self._anomaly_detector != None
         assert self._feature_extractor != None
 
-        # get a testing image from the dataset
-        batch_images = self.generate_real_samples(n_batch)
-
-        for index in range(n_batch):
-            img = batch_images[index,:,:,:]
-            self.plot_aux(img, index)
+        for i, img in enumerate(test_data):
+            # get sample image
+            test_img = np.asarray([img])
+            self.plot_aux(test_img, i)
 
     def evaluate_subset(self, test_data):
         normal = list()
