@@ -120,7 +120,5 @@ def postprocessing(ref_img, rec_image):
         (x, y, w, h) = cv2.boundingRect(c)
         cv2.rectangle(img_copy, (x, y), (x + w, y + h), (255, 0, 0), 1)
         
-    img_copy = np.clip(img_copy, 0, 1)
-    img_copy = adjust_dynamic_range(img_copy, [0, 1], [0, 255])
     return img_copy.astype(np.uint8)
     
