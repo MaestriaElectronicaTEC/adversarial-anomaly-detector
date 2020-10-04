@@ -189,7 +189,14 @@ class StyleAAD2(AbstractADDModel):
             resnext = self.bottleneck_block(resnext, 256, cardinality, strides=1, weight_decay=weight_decay)
         stage_3 = resnext
 
-        P3 = Conv2D(TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c3p3')(stage_3)
+        resnext = self.bottleneck_block(resnext, 512, cardinality, strides=2, weight_decay=weight_decay)
+        for _ in range(1, depths[2]):
+            resnext = self.bottleneck_block(resnext, 512, cardinality, strides=1, weight_decay=weight_decay)
+        stage_4 = resnext
+
+        P4 = Conv2D(TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c4p4')(stage_4)
+        P3 = Add(name="fpn_p4add")([UpSampling2D(size=(2, 2), name="fpn_p4upsampled")(P4),
+                                    Conv2D(TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c3p3', padding='same')(stage_3)])
         P2 = Add(name="fpn_p3add")([UpSampling2D(size=(2, 2), name="fpn_p3upsampled")(P3),
                                     Conv2D(TOP_DOWN_PYRAMID_SIZE, (1, 1), name='fpn_c2p2', padding='same')(stage_2)])
         
@@ -208,10 +215,18 @@ class StyleAAD2(AbstractADDModel):
         P3 = LeakyReLU(alpha=0.2)(P3)
         P3 = Dropout(DROPOUT)(P3)
 
-        output_1 = self.map2style(P2, int(model_scale/2), depth)
-        output_2 = self.map2style(P3, int(model_scale/2), depth)
+        P4 = Conv2D(TOP_DOWN_PYRAMID_SIZE, (3, 3), padding="same", name="fpn_p4")(P4)
+        P4 = LeakyReLU(alpha=0.2)(P4)
+        P4 = Dropout(DROPOUT)(P4)
+        P4 = Conv2D(32768, 1)(P4)
+        P4 = LeakyReLU(alpha=0.2)(P4)
+        P4 = Dropout(DROPOUT)(P4)
 
-        x = Concatenate(axis=1)([output_1, output_2])
+        output_1 = self.map2style(P4, 3, depth)
+        output_2 = self.map2style(P3, 4, depth)
+        output_3 = self.map2style(P2, 3, depth)
+
+        x = Concatenate(axis=1)([output_1, output_2, output_3])
 
         # G & D feature
         G_out = self._generator.model_synthesis(x)
