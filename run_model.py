@@ -128,6 +128,28 @@ def evaluate_anomalies_in_dataset(generatorDir, discriminatorDir, anomalyDetecto
     normal, anomaly = anomaly_detector.evaluate_subset(dataset)
     anomaly_detector.t_sne_analysis(normal, anomaly)
 
+def evaluate_style_anomalies_in_dataset(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDir, ScalerDir, latentDim, dataDir, resultsDir):
+    # load the style gan
+    style_gan_g = StyleGAN_G()
+    style_gan_g.load_weights(generatorDir)
+
+    style_gan_d = StyleGAN_D()
+    style_gan_d.load_weights(discriminatorDir)
+
+    aadModelDir = {
+        "aad" : anomalyDetectorDir,
+        "svc" : SVCDir,
+        "scaler" : ScalerDir
+    }
+
+    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
+    anomaly_detector.load(aadModelDir)
+
+    dataset = load_test_data(dataDir)
+
+    normal, anomaly = anomaly_detector.evaluate_subset(dataset)
+    anomaly_detector.t_sne_analysis(normal, anomaly)
+
 #----------------------------------------------------------------------------
 
 def cmdline(argv):
@@ -207,6 +229,18 @@ def cmdline(argv):
     p.add_argument(     '--latentDim',          help='Latent dimension of the GAN', type=int, default=100)
     p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
     p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
+
+    p = add_command(    'evaluate_style_anomalies_in_dataset', 'Evaluate the presence of anomalies in some dataset using the StyleGAN')
+
+    p.add_argument(     '--generatorDir',       help='Path of the GAN\'s generator weights', default='')
+    p.add_argument(     '--discriminatorDir',   help='Path of the GAN\'s discriminator weights', default='')
+    p.add_argument(     '--anomalyDetectorDir', help='Path of the AnomalyDetector weights', default='')
+    p.add_argument(     '--SVCDir',             help='Path of the Support Vector Machine weights', default='')
+    p.add_argument(     '--ScalerDir',          help='Path of the Scaler weights', default='')
+    p.add_argument(     '--latentDim',          help='Latent dimension of the GAN', type=int, default=512)
+    p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
+    p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
+
 
     args = parser.parse_args(argv[1:] if len(argv) > 1 else ['-h'])
     func = globals()[args.command]
