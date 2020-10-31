@@ -145,10 +145,10 @@ def evaluate_style_anomalies_in_dataset(generatorDir, discriminatorDir, anomalyD
     anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
     anomaly_detector.load(aadModelDir)
 
-    dataset = load_test_data(dataDir)
+    dataset = load_test_data(dataDir, 64, 'channels_first')
 
     normal, anomaly = anomaly_detector.evaluate_subset(dataset)
-    anomaly_detector.t_sne_analysis(normal, anomaly)
+    anomaly_detector.t_sne_analysis(normal, anomaly, channel_format='channels_first')
 
 #----------------------------------------------------------------------------
 

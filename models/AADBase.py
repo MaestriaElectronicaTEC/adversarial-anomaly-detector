@@ -372,13 +372,15 @@ class AbstractADDModel(AbstractModel):
         print('Normal:', len(normal))
         return (normal, anomaly)
 
-    def t_sne_analysis(self, normal, anomaly, output_name='normal_'):
+    def t_sne_analysis(self, normal, anomaly, output_name='normal_', channel_format='channel_last'):
         # asserts
         assert self._feature_extractor != None
         assert self._results_dir != None
 
         # TODO: remove hardcoded dimensions
         random_image = np.random.uniform(0, 1, (100, 48, 48, 3))
+        if format == 'channels_last':
+            random_image = np.random.uniform(0, 1, (100, 3, 64, 64))
 
         # intermidieate output of discriminator
         feature_map_of_random = self._feature_extractor.predict(random_image, verbose=1)
@@ -391,9 +393,6 @@ class AbstractADDModel(AbstractModel):
 
         # plot t-SNE
         X_embedded = TSNE(n_components=2).fit_transform(output)
-        #pyplot.figure(5, figsize=(15, 15))
-        #pyplot.title("t-SNE embedding on the feature representation")
-        #pyplot.scatter(X_embedded[:100,0], X_embedded[:100,1], label='random noise(anomaly)')
         pyplot.scatter(X_embedded[100:(100 + len(anomaly)),0], X_embedded[100:(100 + len(anomaly)),1], label='tomato(anomaly)')
         pyplot.scatter(X_embedded[(100 + len(anomaly)):,0], X_embedded[(100 + len(anomaly)):,1], label='tomato(normal)')
         pyplot.legend()
