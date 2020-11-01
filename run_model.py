@@ -10,6 +10,7 @@ from models.StyleAAD2 import StyleAAD2
 from models.stylegan import StyleGAN_G
 from models.stylegan import StyleGAN_D
 from matplotlib import pyplot
+from tensorflow.keras.utils import Progbar
 from utils.PreProcessing import load_test_data, load_labeled_data, postprocessing
 
 #----------------------------------------------------------------------------
@@ -173,14 +174,16 @@ def plot_style_mosaic(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDir
     
     (dataset, rows, columns) = load_labeled_data(dataDir, dim=dimension, format='channels_first')
 
-    output = np.zeros((rows * dimension, columns * dimension, 3))
-    for image_pack in dataset:
+    output = np.zeros((int(rows * dimension), int(columns * dimension), 3))
+    progress_bar = Progbar(target=len(dataset))
+
+    for i, image_pack in enumerate(dataset):
         img = image_pack['img']
         row = image_pack['row']
         column = image_pack['column']
 
         # Perform prediction
-        _, class_predicted, res = anomaly_detector.predict(np.asarray([img]))
+        score, class_predicted, res = anomaly_detector.predict(np.asarray([img]))
 
         # data pos-processing
         img = (img*127.5)+127.5
@@ -197,6 +200,8 @@ def plot_style_mosaic(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDir
         y = int(row * dimension)
         x = int(column * dimension)
         output[y: (y + dimension), x:(x + dimension)] = img
+
+        progress_bar.update(i, values=[('score', score)])
 
     # save original image
     pyplot.figure(3, figsize=(3, 3))
