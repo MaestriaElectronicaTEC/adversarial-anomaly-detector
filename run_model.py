@@ -1,5 +1,6 @@
 """ Tool for use the model capabilities """
 
+import cv2
 import sys
 import argparse
 import numpy as np
@@ -174,16 +175,19 @@ def plot_style_mosaic(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDir
     
     (dataset, rows, columns) = load_labeled_data(dataDir, dim=dimension, format='channels_first')
 
-    output = np.zeros((int(rows * dimension), int(columns * dimension), 3))
+    output = np.zeros((int((rows + 1) * dimension), int((columns + 1) * dimension), 3), np.uint8)
     progress_bar = Progbar(target=len(dataset))
-
+    progress_bar.update(0, values=[('score', 0)])
+    
     for i, image_pack in enumerate(dataset):
+        
         img = image_pack['img']
         row = image_pack['row']
         column = image_pack['column']
 
         # Perform prediction
         score, class_predicted, res = anomaly_detector.predict(np.asarray([img]))
+        progress_bar.update(i + 1, values=[('score', score)])
 
         # data pos-processing
         img = (img*127.5)+127.5
@@ -197,19 +201,15 @@ def plot_style_mosaic(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDir
         if (class_predicted == 1):
             img = postprocessing(img, reconstructed_img)
 
-        y = int(row * dimension)
-        x = int(column * dimension)
-        output[y: (y + dimension), x:(x + dimension)] = img
-
-        progress_bar.update(i, values=[('score', score)])
+        y_start = int(row * dimension)
+        y_end = int(y_start + dimension)
+        x_start = int(column * dimension)
+        x_end = int(x_start + dimension)
+        output[y_start:y_end, x_start:x_end] = img
 
     # save original image
-    pyplot.figure(3, figsize=(3, 3))
-    pyplot.axis('off')
-    pyplot.imshow(output)
-    pyplot.savefig(resultsDir + '/mosaic_image.pdf')
-
-    pyplot.show()
+    output = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(resultsDir + '/mosaic_image_cv.png', output)
 
 #----------------------------------------------------------------------------
 
