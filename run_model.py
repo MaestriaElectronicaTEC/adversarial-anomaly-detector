@@ -2,13 +2,15 @@
 
 import sys
 import argparse
+import numpy as np
 
 from models.AAD import AAD
 from models.DCGAN import DCGAN
 from models.StyleAAD2 import StyleAAD2
 from models.stylegan import StyleGAN_G
 from models.stylegan import StyleGAN_D
-from utils.PreProcessing import load_test_data
+from matplotlib import pyplot
+from utils.PreProcessing import load_test_data, load_labeled_data, postprocessing
 
 #----------------------------------------------------------------------------
 
@@ -150,6 +152,60 @@ def evaluate_style_anomalies_in_dataset(generatorDir, discriminatorDir, anomalyD
     normal, anomaly = anomaly_detector.evaluate_subset(dataset)
     anomaly_detector.t_sne_analysis(normal, anomaly, channel_format='channels_first')
 
+def plot_style_mosaic(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDir, ScalerDir, latentDim, dataDir, resultsDir):
+    dimension = 64
+
+    # load the style gan
+    style_gan_g = StyleGAN_G()
+    style_gan_g.load_weights(generatorDir)
+
+    style_gan_d = StyleGAN_D()
+    style_gan_d.load_weights(discriminatorDir)
+
+    aadModelDir = {
+        "aad" : anomalyDetectorDir,
+        "svc" : SVCDir,
+        "scaler" : ScalerDir
+    }
+
+    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
+    anomaly_detector.load(aadModelDir)
+    
+    (dataset, rows, columns) = load_labeled_data(dataDir, dim=dimension, format='channels_first')
+
+    output = np.zeros((rows * dimension, columns * dimension, 3))
+    for image_pack in dataset:
+        img = image_pack['img']
+        row = image_pack['row']
+        column = image_pack['column']
+
+        # Perform prediction
+        _, class_predicted, res = anomaly_detector.predict(np.asarray([img]))
+
+        # data pos-processing
+        img = (img*127.5)+127.5
+        img = img.astype(np.uint8)
+        img = img.transpose([1, 2, 0])
+
+        reconstructed_img = res[0]
+        reconstructed_img = reconstructed_img.transpose([1, 2, 0])
+
+        # classify image
+        if (class_predicted == 1):
+            img = postprocessing(img, reconstructed_img)
+
+        y = int(row * dimension)
+        x = int(column * dimension)
+        output[y: (y + dimension), x:(x + dimension)] = img
+
+    # save original image
+    pyplot.figure(3, figsize=(3, 3))
+    pyplot.axis('off')
+    pyplot.imshow(output)
+    pyplot.savefig(resultsDir + '/mosaic_image.pdf')
+
+    pyplot.show()
+
 #----------------------------------------------------------------------------
 
 def cmdline(argv):
@@ -241,6 +297,16 @@ def cmdline(argv):
     p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
     p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
 
+    p = add_command(    'plot_style_mosaic', 'Plot mosaic image')
+
+    p.add_argument(     '--generatorDir',       help='Path of the GAN\'s generator weights', default='')
+    p.add_argument(     '--discriminatorDir',   help='Path of the GAN\'s discriminator weights', default='')
+    p.add_argument(     '--anomalyDetectorDir', help='Path of the AnomalyDetector weights', default='')
+    p.add_argument(     '--SVCDir',             help='Path of the Support Vector Machine weights', default='')
+    p.add_argument(     '--ScalerDir',          help='Path of the Scaler weights', default='')
+    p.add_argument(     '--latentDim',          help='Latent dimension of the GAN', type=int, default=512)
+    p.add_argument(     '--dataDir',            help='Path of the dataset', default='')
+    p.add_argument(     '--resultsDir',         help='Path where the results will be stored', default='')
 
     args = parser.parse_args(argv[1:] if len(argv) > 1 else ['-h'])
     func = globals()[args.command]

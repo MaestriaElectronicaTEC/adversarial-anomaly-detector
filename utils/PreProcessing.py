@@ -88,6 +88,45 @@ def load_test_data(data_dir, dim=48, format='channels_last'):
     print('Found ' + str(len(images)) + ' images for test.')
     return np.asarray(images)
 
+def load_labeled_data(data_dir, dim=48, format='channels_last'):
+    img_list = glob.glob(data_dir + '*.png')
+    images = list()
+    rows = 0
+    columns = 0
+
+    for img_path in img_list:
+        # Load image
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(img, (dim, dim), interpolation = cv2.INTER_CUBIC)
+        img = (img.astype(np.float32) - 127.5) / 127.5
+
+        if format == 'channels_first':
+            img = img.transpose([2, 0, 1])
+
+        # Retrieve image dimensions
+        img_split = img_path.split('/')
+        filename = img_split[-1][:-4]
+        
+        img_location = filename.split('_')[-1].split('x')
+        img_row = int(img_location[0]) / dim
+        img_column = int(img_location[1]) / dim
+
+        loaded_img = {
+            "img" : img,
+            "row" : img_row,
+            "column" : img_column
+        }
+        images.append(loaded_img)
+
+        # Update mosaic dimension
+        if img_row > rows:
+            rows = img_row
+        if img_column > columns:
+            columns = img_column
+
+    return (images, rows, columns)
+
 def postprocessing(ref_img, rec_image):
     blur = cv2.blur(ref_img,(8,8))
 
