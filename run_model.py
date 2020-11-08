@@ -7,7 +7,7 @@ import numpy as np
 
 from models.AAD import AAD
 from models.DCGAN import DCGAN
-from models.StyleAAD2 import StyleAAD2
+from models.StyleAAD import StyleAAD
 from models.stylegan import StyleGAN_G
 from models.stylegan import StyleGAN_D
 from matplotlib import pyplot
@@ -61,7 +61,7 @@ def plot_style_anomaly(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDi
         "scaler" : ScalerDir
     }
 
-    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
+    anomaly_detector = StyleAAD(style_gan_g, style_gan_d, resultsDir, latentDim)
     anomaly_detector.load(aadModelDir)
     anomaly_detector.preprocessing(dataDir)
     anomaly_detector.plot()
@@ -82,7 +82,7 @@ def plot_anomaly_batch(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDi
 
     data = load_test_data(dataDir, 64, 'channels_first')
 
-    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
+    anomaly_detector = StyleAAD(style_gan_g, style_gan_d, resultsDir, latentDim)
     anomaly_detector.load(aadModelDir)
     anomaly_detector.plot_batch(data)
 
@@ -146,7 +146,7 @@ def evaluate_style_anomalies_in_dataset(generatorDir, discriminatorDir, anomalyD
         "scaler" : ScalerDir
     }
 
-    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
+    anomaly_detector = StyleAAD(style_gan_g, style_gan_d, resultsDir, latentDim)
     anomaly_detector.load(aadModelDir)
 
     dataset = load_test_data(dataDir, 64, 'channels_first')
@@ -170,7 +170,7 @@ def plot_style_mosaic(generatorDir, discriminatorDir, anomalyDetectorDir, SVCDir
         "scaler" : ScalerDir
     }
 
-    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
+    anomaly_detector = StyleAAD(style_gan_g, style_gan_d, resultsDir, latentDim)
     anomaly_detector.load(aadModelDir)
     
     (dataset, rows, columns) = load_labeled_data(dataDir, dim=dimension, format='channels_first')

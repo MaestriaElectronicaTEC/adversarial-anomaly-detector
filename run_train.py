@@ -6,7 +6,6 @@ import argparse
 
 from models.AAD import AAD
 from models.StyleAAD import StyleAAD
-from models.StyleAAD2 import StyleAAD2
 from models.DCGAN import DCGAN
 from models.stylegan import StyleGAN_G
 from models.stylegan import StyleGAN_D
@@ -44,7 +43,7 @@ def train_style_anomaly_detector(generatorDir, discriminatorDir, latentDim, reco
     style_gan_d = StyleGAN_D()
     style_gan_d.load_weights(discriminatorDir)
 
-    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim, reconstructionError, dicriminatorError)
+    anomaly_detector = StyleAAD(style_gan_g, style_gan_d, resultsDir, latentDim, reconstructionError, dicriminatorError)
     anomaly_detector.preprocessing(dataDir)
     anomaly_detector.train(n_epochs=epochs)
 
@@ -86,7 +85,7 @@ def train_style_anomaly_grid_search(generatorDir, discriminatorDir, anomalyDetec
     normal = load_test_data(normlaDataDir, 64, 'channels_first')
     anomaly = load_test_data(anomalyDataDir, 64, 'channels_first')
 
-    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
+    anomaly_detector = StyleAAD(style_gan_g, style_gan_d, resultsDir, latentDim)
     anomaly_detector.load(aadModelDir)
     anomaly_detector.train_svm_with_grid_search(normal, anomaly)
 
@@ -128,7 +127,7 @@ def train_style_anomaly_classifier(generatorDir, discriminatorDir, anomalyDetect
     normal = load_test_data(normlaDataDir, 64, 'channels_first')
     anomaly = load_test_data(anomalyDataDir, 64, 'channels_first')
 
-    anomaly_detector = StyleAAD2(style_gan_g, style_gan_d, resultsDir, latentDim)
+    anomaly_detector = StyleAAD(style_gan_g, style_gan_d, resultsDir, latentDim)
     anomaly_detector.load(aadModelDir)
     anomaly_detector.train_svm(C, gamma, degree, kernel, normal, anomaly)
 
