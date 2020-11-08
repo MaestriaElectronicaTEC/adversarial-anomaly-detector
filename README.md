@@ -1,2 +1,3 @@
 # Adversarial Anomaly Detector
-Master thesis research work about the pest and diseases detection in tomato crops using Deep Learning techniques.
+Tomato is one of the main vegetables worldwide due to its versatility of use and its economic impact. However, climate change has caused the management of pests and diseases to be increasingly complicated. That is why the implementation of non-invasive techniques for the early diagnosis of diseases in the field of crops represents a viable solution for the control of pests and diseases, avoiding side effects such as environmental conditions. This project presents a study of semi-supervised algorithms such as generative models, with the aim of detecting anomalies in tomato spelling. In addition, a model proposal capable of detecting anomalies is proposed, based on adversary generative networks.
+
